@@ -7,9 +7,7 @@ plugins {
 
 android {
     namespace = "com.wycherley.trackmybus"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36  // ← FIXED: Changed from compileSdk { version = release(36) }
 
     defaultConfig {
         applicationId = "com.wycherley.trackmybus"
@@ -58,10 +56,9 @@ dependencies {
     implementation("com.google.firebase:firebase-database")
     implementation("com.google.firebase:firebase-messaging")
 
-    //Google map dependies
+    // Google Maps Dependencies
     implementation("com.google.android.gms:play-services-maps:18.2.0")
     implementation("com.google.android.gms:play-services-location:21.1.0")
-
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -70,6 +67,4 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-
-
 }
