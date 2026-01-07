@@ -1,4 +1,4 @@
-package com.wycherley.trackmybus.ui.theme
+package com.wycherley.trackmybus.ui.auth
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

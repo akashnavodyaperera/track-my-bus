@@ -1,6 +1,5 @@
-package com.wycherley.trackmybus.ui.theme
+package com.wycherley.trackmybus.ui.auth
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme

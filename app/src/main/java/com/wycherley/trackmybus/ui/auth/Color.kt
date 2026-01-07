@@ -1,4 +1,4 @@
-package com.wycherley.trackmybus.ui.theme
+package com.wycherley.trackmybus.ui.auth
 
 import androidx.compose.ui.graphics.Color
 
