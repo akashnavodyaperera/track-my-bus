@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:gravity="center"
+    android:background="@android:color/white">
+
+    <!-- Icon/Image -->
+    <ImageView
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:src="@android:drawable/ic_menu_directions"
+        android:tint="@android:color/holo_orange_dark"
+        android:layout_marginBottom="32dp" />
+
+    <!-- Welcome Text -->
+    <TextView
+        android:id="@+id/tvWelcome"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Welcome, Driver!"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/black"
+        android:gravity="center"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Role Text -->
+    <TextView
+        android:id="@+id/tvRole"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Role: DRIVER"
+        android:textSize="18sp"
+        android:textColor="@android:color/holo_orange_dark"
+        android:background="@android:color/transparent"
+        android:padding="12dp"
+        android:layout_marginBottom="32dp" />
+
+    <!-- Feature Buttons -->
+    <Button
+        android:id="@+id/btnStartRoute"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:text="Start Route"
+        android:textSize="16sp"
+        android:layout_marginBottom="12dp" />
+
+    <Button
+        android:id="@+id/btnMyRoute"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:text="View My Route"
+        android:textSize="16sp"
+        android:layout_marginBottom="12dp" />
+
+    <Button
+        android:id="@+id/btnEmergency"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:text="Emergency Alert"
+        android:textSize="16sp"
+        android:backgroundTint="@android:color/holo_red_dark" />
+
+</LinearLayout>

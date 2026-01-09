@@ -3,6 +3,7 @@ package com.wycherley.trackmybus.ui.auth;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
@@ -11,30 +12,39 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.textfield.TextInputEditText;
-import com.wycherley.trackmybus.MainActivity;
+import com.google.firebase.auth.FirebaseUser;
 import com.wycherley.trackmybus.R;
+import com.wycherley.trackmybus.models.User;
+import com.wycherley.trackmybus.models.UserRole;
 import com.wycherley.trackmybus.repositories.AuthRepository;
+import com.wycherley.trackmybus.repositories.UserRepository;
+import com.wycherley.trackmybus.ui.admin.AdminDashboardActivity;
+import com.wycherley.trackmybus.ui.driver.DriverDashboardActivity;
+import com.wycherley.trackmybus.ui.parent.ParentDashboardActivity;
 
 public class LoginActivity extends AppCompatActivity {
 
+    private static final String TAG = "LoginActivity";
     private TextInputEditText etEmail, etPassword;
     private Button btnLogin;
     private TextView tvSignUp, tvForgotPassword;
     private ProgressBar progressBar;
 
     private AuthRepository authRepository;
+    private UserRepository userRepository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        // Initialize repository
+        // Initialize repositories
         authRepository = AuthRepository.getInstance();
+        userRepository = UserRepository.getInstance();
 
         // Check if user is already logged in
         if (authRepository.isUserLoggedIn()) {
-            navigateToMainActivity();
+            navigateBasedOnRole();
             return;
         }
 
@@ -81,15 +91,56 @@ public class LoginActivity extends AppCompatActivity {
         authRepository.signIn(email, password, new AuthRepository.OnAuthCompleteListener() {
             @Override
             public void onSuccess(String message) {
-                showProgress(false);
-                Toast.makeText(LoginActivity.this, message, Toast.LENGTH_SHORT).show();
-                navigateToMainActivity();
+                Log.d(TAG, "Login successful, checking user role...");
+                navigateBasedOnRole();
             }
 
             @Override
             public void onFailure(String error) {
                 showProgress(false);
                 Toast.makeText(LoginActivity.this, "Login failed: " + error, Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private void navigateBasedOnRole() {
+        FirebaseUser firebaseUser = authRepository.getCurrentUser();
+        if (firebaseUser == null) {
+            showProgress(false);
+            return;
+        }
+
+        String userId = firebaseUser.getUid();
+
+        // Fetch user data from Firebase
+        userRepository.getUserById(userId, new UserRepository.OnUserLoadListener() {
+            @Override
+            public void onUserLoaded(User user) {
+                showProgress(false);
+                Log.d(TAG, "User loaded with role: " + user.getRole());
+
+                Intent intent;
+                UserRole role = user.getRole();
+
+                // Navigate based on role
+                if (role == UserRole.ADMIN) {
+                    intent = new Intent(LoginActivity.this, AdminDashboardActivity.class);
+                } else if (role == UserRole.DRIVER) {
+                    intent = new Intent(LoginActivity.this, DriverDashboardActivity.class);
+                } else {
+                    intent = new Intent(LoginActivity.this, ParentDashboardActivity.class);
+                }
+
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+                finish();
+            }
+
+            @Override
+            public void onError(String error) {
+                showProgress(false);
+                Log.e(TAG, "Error loading user: " + error);
+                Toast.makeText(LoginActivity.this, "Error: " + error, Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -159,12 +210,5 @@ public class LoginActivity extends AppCompatActivity {
         btnLogin.setEnabled(!show);
         etEmail.setEnabled(!show);
         etPassword.setEnabled(!show);
-    }
-
-    private void navigateToMainActivity() {
-        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
-        finish();
     }
 }

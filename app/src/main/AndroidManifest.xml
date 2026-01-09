@@ -34,7 +34,22 @@
             android:exported="false"
             android:parentActivityName=".ui.auth.LoginActivity" />
 
-        <!-- Main Activity -->
+        <!-- Parent Dashboard -->
+        <activity
+            android:name=".ui.parent.ParentDashboardActivity"
+            android:exported="false" />
+
+        <!-- Driver Dashboard -->
+        <activity
+            android:name=".ui.driver.DriverDashboardActivity"
+            android:exported="false" />
+
+        <!-- Admin Dashboard -->
+        <activity
+            android:name=".ui.admin.AdminDashboardActivity"
+            android:exported="false" />
+
+        <!-- Main Activity (Legacy - can be removed later) -->
         <activity
             android:name=".MainActivity"
             android:exported="false" />

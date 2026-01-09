@@ -14,10 +14,15 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.textfield.TextInputEditText;
-import com.wycherley.trackmybus.MainActivity;
 import com.wycherley.trackmybus.R;
 import com.wycherley.trackmybus.models.UserRole;
 import com.wycherley.trackmybus.repositories.AuthRepository;
+import com.wycherley.trackmybus.repositories.UserRepository;
+import com.google.firebase.auth.FirebaseUser;
+import com.wycherley.trackmybus.models.User;
+import com.wycherley.trackmybus.ui.admin.AdminDashboardActivity;
+import com.wycherley.trackmybus.ui.driver.DriverDashboardActivity;
+import com.wycherley.trackmybus.ui.parent.ParentDashboardActivity;
 
 public class SignUpActivity extends AppCompatActivity {
 
@@ -222,9 +227,38 @@ public class SignUpActivity extends AppCompatActivity {
     }
 
     private void navigateToMainActivity() {
-        Intent intent = new Intent(SignUpActivity.this, MainActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
-        finish();
+        FirebaseUser firebaseUser = authRepository.getCurrentUser();
+        if (firebaseUser == null) {
+            return;
+        }
+
+        String userId = firebaseUser.getUid();
+
+        // Fetch user data to determine role
+        UserRepository.getInstance().getUserById(userId, new UserRepository.OnUserLoadListener() {
+            @Override
+            public void onUserLoaded(User user) {
+                Intent intent;
+                UserRole role = user.getRole();
+
+                // Navigate based on role
+                if (role == UserRole.ADMIN) {
+                    intent = new Intent(SignUpActivity.this, AdminDashboardActivity.class);
+                } else if (role == UserRole.DRIVER) {
+                    intent = new Intent(SignUpActivity.this, DriverDashboardActivity.class);
+                } else {
+                    intent = new Intent(SignUpActivity.this, ParentDashboardActivity.class);
+                }
+
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+                finish();
+            }
+
+            @Override
+            public void onError(String error) {
+                Toast.makeText(SignUpActivity.this, "Error: " + error, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 }
