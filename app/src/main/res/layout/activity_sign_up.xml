@@ -113,47 +113,25 @@
                 android:inputType="textPassword" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Role Selection -->
+        <!-- Role Selection Label -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="I am a:"
+            android:text="Select Your Role"
             android:textSize="16sp"
             android:textStyle="bold"
             android:textColor="@android:color/black"
-            android:layout_marginBottom="12dp" />
+            android:layout_marginBottom="8dp" />
 
-        <RadioGroup
-            android:id="@+id/rgRole"
+        <!-- Role Dropdown (Spinner) -->
+        <Spinner
+            android:id="@+id/spinnerRole"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp">
-
-            <RadioButton
-                android:id="@+id/rbParent"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Parent"
-                android:textSize="16sp"
-                android:checked="true"
-                android:padding="8dp" />
-
-            <RadioButton
-                android:id="@+id/rbDriver"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Driver"
-                android:textSize="16sp"
-                android:padding="8dp" />
-
-            <RadioButton
-                android:id="@+id/rbAdmin"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Administrator"
-                android:textSize="16sp"
-                android:padding="8dp" />
-        </RadioGroup>
+            android:layout_height="56dp"
+            android:background="@android:drawable/btn_dropdown"
+            android:padding="12dp"
+            android:layout_marginBottom="24dp"
+            android:spinnerMode="dropdown" />
 
         <!-- Sign Up Button -->
         <Button

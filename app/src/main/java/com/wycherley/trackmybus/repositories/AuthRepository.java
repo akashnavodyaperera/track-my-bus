@@ -59,6 +59,8 @@ public class AuthRepository {
                                 // Create user object
                                 User user = new User(userId, email, name, phoneNumber, role);
 
+                                Log.d(TAG, "Creating user with role: " + role);
+
                                 // Save to database
                                 saveUserToDatabase(user, listener);
                             }
@@ -99,7 +101,7 @@ public class AuthRepository {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
                         if (task.isSuccessful()) {
-                            Log.d(TAG, "User saved to database");
+                            Log.d(TAG, "User saved to database with role: " + user.getRole());
                             listener.onSuccess("Account created successfully");
                         } else {
                             Log.e(TAG, "Failed to save user", task.getException());

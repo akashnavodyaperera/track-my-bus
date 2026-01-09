@@ -58,6 +58,24 @@ public class User {
         this.permissions = new ArrayList<>();
     }
 
+    // AUTO-DETECT ROLE FROM EMAIL
+    public static UserRole detectRoleFromEmail(String email) {
+        String emailLower = email.toLowerCase();
+
+        // Check for admin keywords
+        if (emailLower.contains("admin") || emailLower.startsWith("admin@")) {
+            return UserRole.ADMIN;
+        }
+
+        // Check for driver keywords
+        if (emailLower.contains("driver") || emailLower.startsWith("driver.")) {
+            return UserRole.DRIVER;
+        }
+
+        // Default to parent
+        return UserRole.PARENT;
+    }
+
     // Getters and Setters
     public String getUserId() { return userId; }
     public void setUserId(String userId) { this.userId = userId; }

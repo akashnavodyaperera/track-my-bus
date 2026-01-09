@@ -5,10 +5,11 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Patterns;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ProgressBar;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
@@ -21,13 +22,13 @@ import com.wycherley.trackmybus.repositories.AuthRepository;
 public class SignUpActivity extends AppCompatActivity {
 
     private TextInputEditText etName, etEmail, etPhone, etPassword, etConfirmPassword;
-    private RadioGroup rgRole;
-    private RadioButton rbParent, rbDriver, rbAdmin;
+    private Spinner spinnerRole;
     private Button btnSignUp;
     private TextView tvLogin;
     private ProgressBar progressBar;
 
     private AuthRepository authRepository;
+    private UserRole selectedRole = UserRole.PARENT; // Default
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +41,9 @@ public class SignUpActivity extends AppCompatActivity {
         // Initialize views
         initViews();
 
+        // Setup spinner
+        setupRoleSpinner();
+
         // Set click listeners
         setClickListeners();
     }
@@ -50,13 +54,51 @@ public class SignUpActivity extends AppCompatActivity {
         etPhone = findViewById(R.id.etPhone);
         etPassword = findViewById(R.id.etPassword);
         etConfirmPassword = findViewById(R.id.etConfirmPassword);
-        rgRole = findViewById(R.id.rgRole);
-        rbParent = findViewById(R.id.rbParent);
-        rbDriver = findViewById(R.id.rbDriver);
-        rbAdmin = findViewById(R.id.rbAdmin);
+        spinnerRole = findViewById(R.id.spinnerRole);
         btnSignUp = findViewById(R.id.btnSignUp);
         tvLogin = findViewById(R.id.tvLogin);
         progressBar = findViewById(R.id.progressBar);
+    }
+
+    private void setupRoleSpinner() {
+        // Create array of roles
+        String[] roles = {"Parent", "Driver", "Administrator"};
+
+        // Create adapter
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_spinner_item,
+                roles
+        );
+
+        // Set dropdown layout
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+        // Set adapter to spinner
+        spinnerRole.setAdapter(adapter);
+
+        // Set selection listener
+        spinnerRole.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                switch (position) {
+                    case 0:
+                        selectedRole = UserRole.PARENT;
+                        break;
+                    case 1:
+                        selectedRole = UserRole.DRIVER;
+                        break;
+                    case 2:
+                        selectedRole = UserRole.ADMIN;
+                        break;
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                selectedRole = UserRole.PARENT; // Default
+            }
+        });
     }
 
     private void setClickListeners() {
@@ -82,9 +124,6 @@ public class SignUpActivity extends AppCompatActivity {
         String password = etPassword.getText().toString().trim();
         String confirmPassword = etConfirmPassword.getText().toString().trim();
 
-        // Get selected role
-        UserRole role = getSelectedRole();
-
         // Validate inputs
         if (!validateInputs(name, email, phone, password, confirmPassword)) {
             return;
@@ -93,8 +132,8 @@ public class SignUpActivity extends AppCompatActivity {
         // Show progress
         showProgress(true);
 
-        // Sign up
-        authRepository.signUp(email, password, name, phone, role,
+        // Sign up with selected role
+        authRepository.signUp(email, password, name, phone, selectedRole,
                 new AuthRepository.OnAuthCompleteListener() {
                     @Override
                     public void onSuccess(String message) {
@@ -110,18 +149,6 @@ public class SignUpActivity extends AppCompatActivity {
                                 Toast.LENGTH_LONG).show();
                     }
                 });
-    }
-
-    private UserRole getSelectedRole() {
-        int selectedId = rgRole.getCheckedRadioButtonId();
-
-        if (selectedId == R.id.rbDriver) {
-            return UserRole.DRIVER;
-        } else if (selectedId == R.id.rbAdmin) {
-            return UserRole.ADMIN;
-        } else {
-            return UserRole.PARENT;
-        }
     }
 
     private boolean validateInputs(String name, String email, String phone,
@@ -191,7 +218,7 @@ public class SignUpActivity extends AppCompatActivity {
         etPhone.setEnabled(!show);
         etPassword.setEnabled(!show);
         etConfirmPassword.setEnabled(!show);
-        rgRole.setEnabled(!show);
+        spinnerRole.setEnabled(!show);
     }
 
     private void navigateToMainActivity() {
