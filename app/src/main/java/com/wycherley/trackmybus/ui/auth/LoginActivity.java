@@ -36,17 +36,19 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_login);
 
-        // Initialize repositories
+        // Initialize repositories first
         authRepository = AuthRepository.getInstance();
         userRepository = UserRepository.getInstance();
 
-        // Check if user is already logged in
+        // Check if user is already logged in BEFORE setting content view
         if (authRepository.isUserLoggedIn()) {
-            navigateBasedOnRole();
+            navigateBasedOnRoleWithoutUI();
             return;
         }
+
+        // Now set the content view
+        setContentView(R.layout.activity_login);
 
         // Initialize views
         initViews();
@@ -116,7 +118,9 @@ public class LoginActivity extends AppCompatActivity {
         userRepository.getUserById(userId, new UserRepository.OnUserLoadListener() {
             @Override
             public void onUserLoaded(User user) {
-                showProgress(false);
+                if (progressBar != null) {
+                    showProgress(false);
+                }
                 Log.d(TAG, "User loaded with role: " + user.getRole());
 
                 Intent intent;
@@ -138,9 +142,55 @@ public class LoginActivity extends AppCompatActivity {
 
             @Override
             public void onError(String error) {
-                showProgress(false);
+                if (progressBar != null) {
+                    showProgress(false);
+                }
                 Log.e(TAG, "Error loading user: " + error);
                 Toast.makeText(LoginActivity.this, "Error: " + error, Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    // Special method for when user is already logged in (called before UI is created)
+    private void navigateBasedOnRoleWithoutUI() {
+        FirebaseUser firebaseUser = authRepository.getCurrentUser();
+        if (firebaseUser == null) {
+            return;
+        }
+
+        String userId = firebaseUser.getUid();
+
+        // Fetch user data from Firebase
+        userRepository.getUserById(userId, new UserRepository.OnUserLoadListener() {
+            @Override
+            public void onUserLoaded(User user) {
+                Log.d(TAG, "Auto-login: User loaded with role: " + user.getRole());
+
+                Intent intent;
+                UserRole role = user.getRole();
+
+                // Navigate based on role
+                if (role == UserRole.ADMIN) {
+                    intent = new Intent(LoginActivity.this, AdminDashboardActivity.class);
+                } else if (role == UserRole.DRIVER) {
+                    intent = new Intent(LoginActivity.this, DriverDashboardActivity.class);
+                } else {
+                    intent = new Intent(LoginActivity.this, ParentDashboardActivity.class);
+                }
+
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+                finish();
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.e(TAG, "Auto-login error: " + error);
+                // If error during auto-login, show login screen
+                setContentView(R.layout.activity_login);
+                initViews();
+                setClickListeners();
+                Toast.makeText(LoginActivity.this, "Please login again", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -206,6 +256,9 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void showProgress(boolean show) {
+        if (progressBar == null) {
+            return; // Safety check
+        }
         progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
         btnLogin.setEnabled(!show);
         etEmail.setEnabled(!show);

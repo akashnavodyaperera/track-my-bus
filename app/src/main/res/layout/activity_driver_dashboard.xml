@@ -7,7 +7,6 @@
     android:gravity="center"
     android:background="@android:color/white">
 
-    <!-- Icon/Image -->
     <ImageView
         android:layout_width="120dp"
         android:layout_height="120dp"
@@ -15,7 +14,6 @@
         android:tint="@android:color/holo_orange_dark"
         android:layout_marginBottom="32dp" />
 
-    <!-- Welcome Text -->
     <TextView
         android:id="@+id/tvWelcome"
         android:layout_width="wrap_content"
@@ -27,7 +25,6 @@
         android:gravity="center"
         android:layout_marginBottom="16dp" />
 
-    <!-- Role Text -->
     <TextView
         android:id="@+id/tvRole"
         android:layout_width="wrap_content"
@@ -39,7 +36,6 @@
         android:padding="12dp"
         android:layout_marginBottom="32dp" />
 
-    <!-- Feature Buttons -->
     <Button
         android:id="@+id/btnStartRoute"
         android:layout_width="match_parent"
@@ -62,6 +58,15 @@
         android:layout_height="56dp"
         android:text="Emergency Alert"
         android:textSize="16sp"
+        android:backgroundTint="@android:color/holo_red_light"
+        android:layout_marginBottom="24dp" />
+
+    <Button
+        android:id="@+id/btnLogout"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:text="Logout"
+        android:textColor="@android:color/white"
         android:backgroundTint="@android:color/holo_red_dark" />
 
 </LinearLayout>

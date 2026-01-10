@@ -2,8 +2,7 @@ package com.wycherley.trackmybus.ui.parent;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.widget.Button;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.firebase.auth.FirebaseUser;
@@ -15,6 +14,7 @@ public class ParentDashboardActivity extends AppCompatActivity {
 
     private AuthRepository authRepository;
     private TextView tvWelcome, tvRole;
+    private Button btnLogout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,6 +26,7 @@ public class ParentDashboardActivity extends AppCompatActivity {
         // Initialize views
         tvWelcome = findViewById(R.id.tvWelcome);
         tvRole = findViewById(R.id.tvRole);
+        btnLogout = findViewById(R.id.btnLogout);
 
         // Get current user
         FirebaseUser user = authRepository.getCurrentUser();
@@ -38,22 +39,12 @@ public class ParentDashboardActivity extends AppCompatActivity {
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle("Parent Dashboard");
         }
-    }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main_menu, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.action_logout) {
+        // Logout button
+        btnLogout.setOnClickListener(v -> {
             authRepository.signOut();
             navigateToLogin();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
+        });
     }
 
     private void navigateToLogin() {
