@@ -7,4 +7,12 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+
+    <!-- Track My Bus Colors -->
+    <color name="primary_blue">#1E3A8A</color>
+    <color name="primary_blue_dark">#0F1F4D</color>
+    <color name="accent_orange">#FF6B35</color>
+    <color name="light_gray">#F5F5F5</color>
+    <color name="text_gray">#757575</color>
 </resources>
