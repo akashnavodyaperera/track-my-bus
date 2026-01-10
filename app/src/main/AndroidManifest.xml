@@ -54,6 +54,12 @@
             android:name=".MainActivity"
             android:exported="false" />
 
+        <!-- User Profile Activity -->
+        <activity
+            android:name=".ui.parent.UserProfileActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.parent.ParentDashboardActivity" />
+
     </application>
 
 </manifest>
