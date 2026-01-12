@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Permissions -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
@@ -18,10 +19,16 @@
         android:theme="@style/Theme.TrackMyBus"
         tools:targetApi="31">
 
+        <!-- Google Maps API Key -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="YOUR_API_KEY_HERE" />
+
         <!-- Login Activity (Main Launcher) -->
         <activity
             android:name=".ui.auth.LoginActivity"
-            android:exported="true">
+            android:exported="true"
+            android:theme="@style/Theme.TrackMyBus">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -32,33 +39,45 @@
         <activity
             android:name=".ui.auth.SignUpActivity"
             android:exported="false"
+            android:theme="@style/Theme.TrackMyBus"
             android:parentActivityName=".ui.auth.LoginActivity" />
 
         <!-- Parent Dashboard -->
         <activity
             android:name=".ui.parent.ParentDashboardActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:theme="@style/Theme.TrackMyBus.NoActionBar" />
 
         <!-- Driver Dashboard -->
         <activity
             android:name=".ui.driver.DriverDashboardActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:theme="@style/Theme.TrackMyBus.NoActionBar" />
 
         <!-- Admin Dashboard -->
         <activity
             android:name=".ui.admin.AdminDashboardActivity"
-            android:exported="false" />
-
-        <!-- Main Activity (Legacy - can be removed later) -->
-        <activity
-            android:name=".MainActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:theme="@style/Theme.TrackMyBus.NoActionBar" />
 
         <!-- User Profile Activity -->
         <activity
             android:name=".ui.parent.UserProfileActivity"
             android:exported="false"
+            android:theme="@style/Theme.TrackMyBus"
             android:parentActivityName=".ui.parent.ParentDashboardActivity" />
+
+        <!-- Map Activity -->
+        <activity
+            android:name=".ui.parent.MapActivity"
+            android:exported="false"
+            android:theme="@style/Theme.TrackMyBus.NoActionBar" />
+
+        <!-- Main Activity (Legacy - can be removed later) -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="false"
+            android:theme="@style/Theme.TrackMyBus" />
 
     </application>
 
