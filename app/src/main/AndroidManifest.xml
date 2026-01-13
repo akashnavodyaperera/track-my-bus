@@ -54,11 +54,7 @@
             android:exported="false"
             android:theme="@style/Theme.TrackMyBus.NoActionBar" />
 
-        <!-- Admin Dashboard -->
-        <activity
-            android:name=".ui.admin.AdminDashboardActivity"
-            android:exported="false"
-            android:theme="@style/Theme.TrackMyBus.NoActionBar" />
+
 
         <!-- User Profile Activity -->
         <activity
@@ -79,6 +75,43 @@
             android:exported="false"
             android:theme="@style/Theme.TrackMyBus" />
 
+        <!-- Admin Activities -->
+        <activity
+            android:name=".ui.admin.AdminDashboardActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".ui.admin.ManageDriversActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:parentActivityName=".ui.admin.AdminDashboardActivity" />
+
+        <activity
+            android:name=".ui.admin.AddDriverActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:parentActivityName=".ui.admin.ManageDriversActivity" />
+
+        <activity
+            android:name=".ui.admin.EditDriverActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:parentActivityName=".ui.admin.ManageDriversActivity" />
+
+        <!-- Test Activity (Optional - for testing only) -->
+        <activity
+            android:name=".ui.test.TestFirebaseActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
     </application>
+
+
+
+    <!-- Internet Permission (should already be there, but verify) -->
+    <!-- Add this OUTSIDE the <application> tag, before or after it -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
 </manifest>
