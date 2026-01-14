@@ -2,8 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Permissions -->
+    <!-- Permissions - Only declare once at the top -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
@@ -24,42 +25,64 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="YOUR_API_KEY_HERE" />
 
-        <!-- Login Activity (Main Launcher) -->
+        <!-- ========================================== -->
+        <!-- ONBOARDING ACTIVITIES -->
+        <!-- ========================================== -->
+
+        <!-- Splash Activity - MAIN LAUNCHER (Only one LAUNCHER!) -->
         <activity
-            android:name=".ui.auth.LoginActivity"
+            android:name=".ui.onboarding.SplashActivity"
             android:exported="true"
-            android:theme="@style/Theme.TrackMyBus">
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.TrackMyBus.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
+        <!-- Tutorial Activity -->
+        <activity
+            android:name=".ui.onboarding.TutorialActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.TrackMyBus.NoActionBar" />
+
+        <!-- ========================================== -->
+        <!-- AUTHENTICATION ACTIVITIES -->
+        <!-- ========================================== -->
+
+        <!-- Login Activity (NO launcher intent-filter!) -->
+        <activity
+            android:name=".ui.auth.LoginActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.TrackMyBus" />
+
         <!-- Sign Up Activity -->
         <activity
             android:name=".ui.auth.SignUpActivity"
             android:exported="false"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.TrackMyBus"
             android:parentActivityName=".ui.auth.LoginActivity" />
+
+        <!-- ========================================== -->
+        <!-- PARENT ACTIVITIES -->
+        <!-- ========================================== -->
 
         <!-- Parent Dashboard -->
         <activity
             android:name=".ui.parent.ParentDashboardActivity"
             android:exported="false"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.TrackMyBus.NoActionBar" />
-
-        <!-- Driver Dashboard -->
-        <activity
-            android:name=".ui.driver.DriverDashboardActivity"
-            android:exported="false"
-            android:theme="@style/Theme.TrackMyBus.NoActionBar" />
-
-
 
         <!-- User Profile Activity -->
         <activity
             android:name=".ui.parent.UserProfileActivity"
             android:exported="false"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.TrackMyBus"
             android:parentActivityName=".ui.parent.ParentDashboardActivity" />
 
@@ -67,7 +90,58 @@
         <activity
             android:name=".ui.parent.MapActivity"
             android:exported="false"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.TrackMyBus.NoActionBar" />
+
+        <!-- ========================================== -->
+        <!-- DRIVER ACTIVITIES -->
+        <!-- ========================================== -->
+
+        <!-- Driver Dashboard -->
+        <activity
+            android:name=".ui.driver.DriverDashboardActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.TrackMyBus.NoActionBar" />
+
+        <!-- ========================================== -->
+        <!-- ADMIN ACTIVITIES -->
+        <!-- ========================================== -->
+
+        <!-- Admin Dashboard -->
+        <activity
+            android:name=".ui.admin.AdminDashboardActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.TrackMyBus" />
+
+        <!-- Manage Drivers Activity -->
+        <activity
+            android:name=".ui.admin.ManageDriversActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.TrackMyBus"
+            android:parentActivityName=".ui.admin.AdminDashboardActivity" />
+
+        <!-- Add Driver Activity -->
+        <activity
+            android:name=".ui.admin.AddDriverActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.TrackMyBus"
+            android:parentActivityName=".ui.admin.ManageDriversActivity" />
+
+        <!-- Edit Driver Activity -->
+        <activity
+            android:name=".ui.admin.EditDriverActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.TrackMyBus"
+            android:parentActivityName=".ui.admin.ManageDriversActivity" />
+
+        <!-- ========================================== -->
+        <!-- OTHER ACTIVITIES -->
+        <!-- ========================================== -->
 
         <!-- Main Activity (Legacy - can be removed later) -->
         <activity
@@ -75,43 +149,13 @@
             android:exported="false"
             android:theme="@style/Theme.TrackMyBus" />
 
-        <!-- Admin Activities -->
-        <activity
-            android:name=".ui.admin.AdminDashboardActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
-
-        <activity
-            android:name=".ui.admin.ManageDriversActivity"
-            android:exported="false"
-            android:screenOrientation="portrait"
-            android:parentActivityName=".ui.admin.AdminDashboardActivity" />
-
-        <activity
-            android:name=".ui.admin.AddDriverActivity"
-            android:exported="false"
-            android:screenOrientation="portrait"
-            android:parentActivityName=".ui.admin.ManageDriversActivity" />
-
-        <activity
-            android:name=".ui.admin.EditDriverActivity"
-            android:exported="false"
-            android:screenOrientation="portrait"
-            android:parentActivityName=".ui.admin.ManageDriversActivity" />
-
         <!-- Test Activity (Optional - for testing only) -->
         <activity
             android:name=".ui.test.TestFirebaseActivity"
             android:exported="false"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.TrackMyBus" />
 
     </application>
-
-
-
-    <!-- Internet Permission (should already be there, but verify) -->
-    <!-- Add this OUTSIDE the <application> tag, before or after it -->
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
 </manifest>
