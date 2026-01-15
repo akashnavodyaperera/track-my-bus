@@ -3,18 +3,19 @@ package com.wycherley.trackmybus.ui.auth;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.textfield.TextInputEditText;
 import com.wycherley.trackmybus.R;
 import com.wycherley.trackmybus.models.UserRole;
 import com.wycherley.trackmybus.repositories.AuthRepository;
 import com.wycherley.trackmybus.ui.parent.ParentDashboardActivity;
+import com.wycherley.trackmybus.utils.EmailValidator;
 
 public class SignUpActivity extends AppCompatActivity {
 
@@ -42,6 +43,9 @@ public class SignUpActivity extends AppCompatActivity {
         // Initialize views
         initViews();
 
+        // Setup real-time validation
+        setupEmailValidation();
+
         // Set click listeners
         setClickListeners();
     }
@@ -57,9 +61,65 @@ public class SignUpActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBar);
     }
 
+    private void setupEmailValidation() {
+        // Real-time email validation as user types
+        etEmail.addTextChangedListener(new android.text.TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String email = s.toString().trim();
+                if (!email.isEmpty() && email.contains("@")) {
+                    if (!EmailValidator.isValid(email)) {
+                        // Check if there's a suggested correction
+                        String suggestion = EmailValidator.suggestCorrection(email);
+                        if (suggestion != null) {
+                            etEmail.setError("Did you mean " + suggestion + "?");
+                        } else {
+                            etEmail.setError(EmailValidator.getErrorMessage(email));
+                        }
+                    } else {
+                        etEmail.setError(null);
+                    }
+                }
+            }
+
+            @Override
+            public void afterTextChanged(android.text.Editable s) {}
+        });
+
+        // Validate when focus is lost
+        etEmail.setOnFocusChangeListener((v, hasFocus) -> {
+            if (!hasFocus) {
+                String email = etEmail.getText().toString().trim();
+                if (!email.isEmpty() && !EmailValidator.isValid(email)) {
+                    String suggestion = EmailValidator.suggestCorrection(email);
+                    if (suggestion != null) {
+                        showEmailCorrectionDialog(email, suggestion);
+                    } else {
+                        etEmail.setError(EmailValidator.getErrorMessage(email));
+                    }
+                }
+            }
+        });
+    }
+
+    private void showEmailCorrectionDialog(String typed, String suggestion) {
+        new AlertDialog.Builder(this)
+                .setTitle("Did you mean this?")
+                .setMessage("You typed: " + typed + "\n\nDid you mean: " + suggestion + "?")
+                .setPositiveButton("Yes, use " + suggestion, (dialog, which) -> {
+                    etEmail.setText(suggestion);
+                    etEmail.setError(null);
+                })
+                .setNegativeButton("No, keep my email", null)
+                .show();
+    }
+
     private void setClickListeners() {
         btnSignUp.setOnClickListener(v -> handleSignUp());
-        tvLogin.setOnClickListener(v -> finish()); // Go back to login
+        tvLogin.setOnClickListener(v -> finish());
     }
 
     private void handleSignUp() {
@@ -91,14 +151,24 @@ public class SignUpActivity extends AppCompatActivity {
                     @Override
                     public void onFailure(String error) {
                         showProgress(false);
+
+                        // Handle specific Firebase errors
+                        String errorMessage = error;
+                        if (error.contains("email address is already in use")) {
+                            errorMessage = "This email is already registered. Please login instead.";
+                        } else if (error.contains("network error")) {
+                            errorMessage = "Network error. Please check your internet connection.";
+                        }
+
                         Toast.makeText(SignUpActivity.this,
-                                "Sign up failed: " + error, Toast.LENGTH_LONG).show();
+                                "Sign up failed: " + errorMessage, Toast.LENGTH_LONG).show();
                     }
                 });
     }
 
     private boolean validateInputs(String name, String email, String phone,
                                    String password, String confirmPassword) {
+        // Name validation
         if (TextUtils.isEmpty(name)) {
             etName.setError("Name is required");
             etName.requestFocus();
@@ -111,30 +181,56 @@ public class SignUpActivity extends AppCompatActivity {
             return false;
         }
 
+        // Only allow letters and spaces in name
+        if (!name.matches("[a-zA-Z ]+")) {
+            etName.setError("Name can only contain letters and spaces");
+            etName.requestFocus();
+            return false;
+        }
+
+        // Email validation with EmailValidator utility
         if (TextUtils.isEmpty(email)) {
             etEmail.setError("Email is required");
             etEmail.requestFocus();
             return false;
         }
 
-        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            etEmail.setError("Enter a valid email");
+        if (!EmailValidator.isValid(email)) {
+            String suggestion = EmailValidator.suggestCorrection(email);
+            if (suggestion != null) {
+                etEmail.setError("Did you mean " + suggestion + "?");
+            } else {
+                etEmail.setError(EmailValidator.getErrorMessage(email));
+            }
             etEmail.requestFocus();
             return false;
         }
 
+        // Phone validation
         if (TextUtils.isEmpty(phone)) {
             etPhone.setError("Phone number is required");
             etPhone.requestFocus();
             return false;
         }
 
-        if (phone.length() < 10) {
-            etPhone.setError("Enter a valid phone number (at least 10 digits)");
+        // Remove any spaces, hyphens, or parentheses
+        String cleanPhone = phone.replaceAll("[\\s()-]", "");
+
+        // Check if it's a valid Sri Lankan number or international format
+        if (cleanPhone.length() < 10) {
+            etPhone.setError("Phone number must be at least 10 digits");
             etPhone.requestFocus();
             return false;
         }
 
+        // Only allow numbers, spaces, hyphens, parentheses, and + for country code
+        if (!phone.matches("[0-9\\s()+-]+")) {
+            etPhone.setError("Invalid phone number format");
+            etPhone.requestFocus();
+            return false;
+        }
+
+        // Password validation
         if (TextUtils.isEmpty(password)) {
             etPassword.setError("Password is required");
             etPassword.requestFocus();
@@ -147,6 +243,20 @@ public class SignUpActivity extends AppCompatActivity {
             return false;
         }
 
+        // Strong password check (optional but recommended)
+        if (!password.matches(".*[A-Za-z].*")) {
+            etPassword.setError("Password must contain at least one letter");
+            etPassword.requestFocus();
+            return false;
+        }
+
+        if (!password.matches(".*[0-9].*")) {
+            etPassword.setError("Password must contain at least one number");
+            etPassword.requestFocus();
+            return false;
+        }
+
+        // Confirm password validation
         if (TextUtils.isEmpty(confirmPassword)) {
             etConfirmPassword.setError("Confirm your password");
             etConfirmPassword.requestFocus();
