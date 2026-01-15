@@ -26,7 +26,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Sign up to get started"
+            android:text="Sign up to track your child's bus"
             android:textSize="16sp"
             android:textColor="@android:color/darker_gray"
             android:layout_marginBottom="32dp" />
@@ -36,15 +36,17 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
+            android:hint="Full Name"
             app:boxBackgroundMode="outline"
+            app:boxStrokeColor="@color/primary_blue"
             app:startIconDrawable="@android:drawable/ic_menu_myplaces">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Full Name"
-                android:inputType="textPersonName" />
+                android:inputType="textPersonName"
+                android:maxLines="1" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Email Input -->
@@ -52,15 +54,17 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
+            android:hint="Email"
             app:boxBackgroundMode="outline"
+            app:boxStrokeColor="@color/primary_blue"
             app:startIconDrawable="@android:drawable/ic_dialog_email">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etEmail"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Email"
-                android:inputType="textEmailAddress" />
+                android:inputType="textEmailAddress"
+                android:maxLines="1" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Phone Input -->
@@ -68,15 +72,17 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
+            android:hint="Phone Number"
             app:boxBackgroundMode="outline"
+            app:boxStrokeColor="@color/primary_blue"
             app:startIconDrawable="@android:drawable/stat_sys_phone_call">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etPhone"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Phone Number"
-                android:inputType="phone" />
+                android:inputType="phone"
+                android:maxLines="1" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Password Input -->
@@ -84,7 +90,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
+            android:hint="Password"
             app:boxBackgroundMode="outline"
+            app:boxStrokeColor="@color/primary_blue"
             app:startIconDrawable="@android:drawable/ic_lock_lock"
             app:endIconMode="password_toggle">
 
@@ -92,16 +100,18 @@
                 android:id="@+id/etPassword"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Password"
-                android:inputType="textPassword" />
+                android:inputType="textPassword"
+                android:maxLines="1" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Confirm Password Input -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="32dp"
+            android:hint="Confirm Password"
             app:boxBackgroundMode="outline"
+            app:boxStrokeColor="@color/primary_blue"
             app:startIconDrawable="@android:drawable/ic_lock_lock"
             app:endIconMode="password_toggle">
 
@@ -109,29 +119,9 @@
                 android:id="@+id/etConfirmPassword"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Confirm Password"
-                android:inputType="textPassword" />
+                android:inputType="textPassword"
+                android:maxLines="1" />
         </com.google.android.material.textfield.TextInputLayout>
-
-        <!-- Role Selection Label -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Select Your Role"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="@android:color/black"
-            android:layout_marginBottom="8dp" />
-
-        <!-- Role Dropdown (Spinner) -->
-        <Spinner
-            android:id="@+id/spinnerRole"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:background="@android:drawable/btn_dropdown"
-            android:padding="12dp"
-            android:layout_marginBottom="24dp"
-            android:spinnerMode="dropdown" />
 
         <!-- Sign Up Button -->
         <Button
@@ -141,6 +131,8 @@
             android:text="Sign Up"
             android:textSize="16sp"
             android:textStyle="bold"
+            android:textColor="@android:color/white"
+            android:backgroundTint="@color/primary_blue"
             android:layout_marginBottom="16dp" />
 
         <!-- Progress Bar -->
@@ -149,7 +141,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:visibility="gone" />
+            android:visibility="gone"
+            android:layout_marginBottom="16dp" />
 
         <!-- Login Link -->
         <LinearLayout
@@ -157,25 +150,39 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:layout_gravity="center"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="8dp"
             android:layout_marginBottom="24dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Already have an account? "
-                android:textSize="14sp" />
+                android:textSize="14sp"
+                android:textColor="@color/text_gray" />
 
             <TextView
                 android:id="@+id/tvLogin"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Login"
-                android:textColor="@android:color/holo_blue_dark"
+                android:textColor="@color/primary_blue"
                 android:textStyle="bold"
                 android:textSize="14sp"
+                android:clickable="true"
+                android:focusable="true"
                 android:padding="4dp" />
         </LinearLayout>
+
+        <!-- Terms and Privacy -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="By signing up, you agree to our Terms of Service and Privacy Policy"
+            android:textSize="12sp"
+            android:textColor="@color/text_gray"
+            android:gravity="center"
+            android:layout_gravity="center"
+            android:layout_marginBottom="16dp" />
 
     </LinearLayout>
 

@@ -5,11 +5,8 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Patterns;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ProgressBar;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
@@ -17,37 +14,33 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.wycherley.trackmybus.R;
 import com.wycherley.trackmybus.models.UserRole;
 import com.wycherley.trackmybus.repositories.AuthRepository;
-import com.wycherley.trackmybus.repositories.UserRepository;
-import com.google.firebase.auth.FirebaseUser;
-import com.wycherley.trackmybus.models.User;
-import com.wycherley.trackmybus.ui.admin.AdminDashboardActivity;
-import com.wycherley.trackmybus.ui.driver.DriverDashboardActivity;
 import com.wycherley.trackmybus.ui.parent.ParentDashboardActivity;
 
 public class SignUpActivity extends AppCompatActivity {
 
     private TextInputEditText etName, etEmail, etPhone, etPassword, etConfirmPassword;
-    private Spinner spinnerRole;
     private Button btnSignUp;
     private TextView tvLogin;
     private ProgressBar progressBar;
 
     private AuthRepository authRepository;
-    private UserRole selectedRole = UserRole.PARENT; // Default
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_up);
 
+        // Set title
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle("Create Parent Account");
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
+
         // Initialize repository
         authRepository = AuthRepository.getInstance();
 
         // Initialize views
         initViews();
-
-        // Setup spinner
-        setupRoleSpinner();
 
         // Set click listeners
         setClickListeners();
@@ -59,67 +52,14 @@ public class SignUpActivity extends AppCompatActivity {
         etPhone = findViewById(R.id.etPhone);
         etPassword = findViewById(R.id.etPassword);
         etConfirmPassword = findViewById(R.id.etConfirmPassword);
-        spinnerRole = findViewById(R.id.spinnerRole);
         btnSignUp = findViewById(R.id.btnSignUp);
         tvLogin = findViewById(R.id.tvLogin);
         progressBar = findViewById(R.id.progressBar);
     }
 
-    private void setupRoleSpinner() {
-        // Create array of roles
-        String[] roles = {"Parent", "Driver", "Administrator"};
-
-        // Create adapter
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                this,
-                android.R.layout.simple_spinner_item,
-                roles
-        );
-
-        // Set dropdown layout
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
-        // Set adapter to spinner
-        spinnerRole.setAdapter(adapter);
-
-        // Set selection listener
-        spinnerRole.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                switch (position) {
-                    case 0:
-                        selectedRole = UserRole.PARENT;
-                        break;
-                    case 1:
-                        selectedRole = UserRole.DRIVER;
-                        break;
-                    case 2:
-                        selectedRole = UserRole.ADMIN;
-                        break;
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                selectedRole = UserRole.PARENT; // Default
-            }
-        });
-    }
-
     private void setClickListeners() {
-        btnSignUp.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                handleSignUp();
-            }
-        });
-
-        tvLogin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish(); // Go back to login
-            }
-        });
+        btnSignUp.setOnClickListener(v -> handleSignUp());
+        tvLogin.setOnClickListener(v -> finish()); // Go back to login
     }
 
     private void handleSignUp() {
@@ -137,21 +77,22 @@ public class SignUpActivity extends AppCompatActivity {
         // Show progress
         showProgress(true);
 
-        // Sign up with selected role
-        authRepository.signUp(email, password, name, phone, selectedRole,
+        // Sign up as PARENT (hardcoded role)
+        authRepository.signUp(email, password, name, phone, UserRole.PARENT,
                 new AuthRepository.OnAuthCompleteListener() {
                     @Override
                     public void onSuccess(String message) {
                         showProgress(false);
-                        Toast.makeText(SignUpActivity.this, message, Toast.LENGTH_SHORT).show();
-                        navigateToMainActivity();
+                        Toast.makeText(SignUpActivity.this,
+                                "Account created successfully!", Toast.LENGTH_SHORT).show();
+                        navigateToParentDashboard();
                     }
 
                     @Override
                     public void onFailure(String error) {
                         showProgress(false);
-                        Toast.makeText(SignUpActivity.this, "Sign up failed: " + error,
-                                Toast.LENGTH_LONG).show();
+                        Toast.makeText(SignUpActivity.this,
+                                "Sign up failed: " + error, Toast.LENGTH_LONG).show();
                     }
                 });
     }
@@ -160,6 +101,12 @@ public class SignUpActivity extends AppCompatActivity {
                                    String password, String confirmPassword) {
         if (TextUtils.isEmpty(name)) {
             etName.setError("Name is required");
+            etName.requestFocus();
+            return false;
+        }
+
+        if (name.length() < 3) {
+            etName.setError("Name must be at least 3 characters");
             etName.requestFocus();
             return false;
         }
@@ -183,7 +130,7 @@ public class SignUpActivity extends AppCompatActivity {
         }
 
         if (phone.length() < 10) {
-            etPhone.setError("Enter a valid phone number");
+            etPhone.setError("Enter a valid phone number (at least 10 digits)");
             etPhone.requestFocus();
             return false;
         }
@@ -223,42 +170,18 @@ public class SignUpActivity extends AppCompatActivity {
         etPhone.setEnabled(!show);
         etPassword.setEnabled(!show);
         etConfirmPassword.setEnabled(!show);
-        spinnerRole.setEnabled(!show);
     }
 
-    private void navigateToMainActivity() {
-        FirebaseUser firebaseUser = authRepository.getCurrentUser();
-        if (firebaseUser == null) {
-            return;
-        }
+    private void navigateToParentDashboard() {
+        Intent intent = new Intent(SignUpActivity.this, ParentDashboardActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
+    }
 
-        String userId = firebaseUser.getUid();
-
-        // Fetch user data to determine role
-        UserRepository.getInstance().getUserById(userId, new UserRepository.OnUserLoadListener() {
-            @Override
-            public void onUserLoaded(User user) {
-                Intent intent;
-                UserRole role = user.getRole();
-
-                // Navigate based on role
-                if (role == UserRole.ADMIN) {
-                    intent = new Intent(SignUpActivity.this, AdminDashboardActivity.class);
-                } else if (role == UserRole.DRIVER) {
-                    intent = new Intent(SignUpActivity.this, DriverDashboardActivity.class);
-                } else {
-                    intent = new Intent(SignUpActivity.this, ParentDashboardActivity.class);
-                }
-
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(intent);
-                finish();
-            }
-
-            @Override
-            public void onError(String error) {
-                Toast.makeText(SignUpActivity.this, "Error: " + error, Toast.LENGTH_LONG).show();
-            }
-        });
+    @Override
+    public boolean onSupportNavigateUp() {
+        finish();
+        return true;
     }
 }
