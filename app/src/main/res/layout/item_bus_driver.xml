@@ -6,7 +6,7 @@
     android:layout_marginBottom="12dp"
     app:cardCornerRadius="16dp"
     app:cardElevation="2dp"
-    android:background="@drawable/bus_driver_card_bg">
+    android:background="@android:color/white">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -14,15 +14,19 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Top Section: Profile and Arrow -->
+        <!-- Top Section: Profile, Info and Button -->
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp">
 
+            <!-- Left Side: Profile and Info -->
             <LinearLayout
+                android:id="@+id/leftSection"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
                 android:orientation="horizontal"
                 android:gravity="center_vertical">
 
@@ -32,7 +36,8 @@
                     android:layout_width="48dp"
                     android:layout_height="48dp"
                     android:src="@android:drawable/ic_menu_myplaces"
-                    android:background="@drawable/circle_white_bg" />
+                    android:background="@drawable/circle_white_bg"
+                    android:padding="4dp" />
 
                 <!-- Driver Info -->
                 <LinearLayout
@@ -42,33 +47,57 @@
                     android:layout_marginStart="12dp">
 
                     <TextView
-                        android:id="@+id/tvBusNumber"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="WP NA - 8965"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="@android:color/black" />
-
-                    <TextView
                         android:id="@+id/tvDriverName"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Mr. Surendra Rajapaksha"
-                        android:textSize="12sp"
-                        android:textColor="@color/text_gray" />
+                        android:textSize="14sp"
+                        android:textColor="@android:color/black"
+                        android:textStyle="bold" />
+
+                    <!-- Star Rating -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="4dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="⭐⭐⭐⭐⭐"
+                            android:textSize="12sp" />
+                    </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Arrow Icon -->
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
+            <!-- Right Side: Set as my bus Button -->
+            <Button
+                android:id="@+id/btnSetAsMyBus"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
-                android:src="@android:drawable/ic_menu_more"
-                android:rotation="270" />
+                android:text="Set as my bus"
+                android:textSize="12sp"
+                android:textColor="@android:color/white"
+                android:backgroundTint="@color/primary_blue"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:textAllCaps="false" />
         </RelativeLayout>
+
+        <!-- Bus Number (Centered) -->
+        <TextView
+            android:id="@+id/tvBusNumber"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="WP NA - 8965"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/primary_blue"
+            android:layout_marginBottom="12dp" />
 
         <!-- Route Visualization -->
         <RelativeLayout
@@ -152,7 +181,9 @@
                     android:text="Wycherley International School"
                     android:textSize="12sp"
                     android:textStyle="bold"
-                    android:textColor="@android:color/black" />
+                    android:textColor="@android:color/black"
+                    android:maxWidth="180dp"
+                    android:gravity="end" />
             </LinearLayout>
         </RelativeLayout>
     </LinearLayout>
