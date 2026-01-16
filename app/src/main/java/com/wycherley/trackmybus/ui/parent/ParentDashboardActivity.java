@@ -17,6 +17,7 @@ import com.wycherley.trackmybus.R;
 import com.wycherley.trackmybus.adapters.BusDriverAdapter;
 import com.wycherley.trackmybus.models.BusDriver;
 import com.wycherley.trackmybus.repositories.BusDriverRepository;
+import com.wycherley.trackmybus.utils.ParentBusPreference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,6 +32,7 @@ public class ParentDashboardActivity extends AppCompatActivity {
 
     private BusDriverAdapter busDriverAdapter;
     private BusDriverRepository driverRepository;
+    private ParentBusPreference busPreference;
 
     private List<BusDriver> allDrivers = new ArrayList<>();
     private List<BusDriver> filteredDrivers = new ArrayList<>();
@@ -46,6 +48,7 @@ public class ParentDashboardActivity extends AppCompatActivity {
         }
 
         driverRepository = BusDriverRepository.getInstance();
+        busPreference = new ParentBusPreference(this);
 
         initViews();
         setupProfileClick();
@@ -62,10 +65,7 @@ public class ParentDashboardActivity extends AppCompatActivity {
         etSearchBus = findViewById(R.id.etSearchBus);
         rvBusDrivers = findViewById(R.id.rvBusDrivers);
         bottomNavigation = findViewById(R.id.bottomNavigation);
-
-        // Add a ProgressBar to your layout or create programmatically
-        progressBar = new ProgressBar(this);
-        // You should add this to your XML layout instead
+        progressBar = findViewById(R.id.progressBar);
     }
 
     private void setupProfileClick() {
@@ -88,6 +88,13 @@ public class ParentDashboardActivity extends AppCompatActivity {
         rvBusDrivers.setLayoutManager(new LinearLayoutManager(this));
         rvBusDrivers.setAdapter(busDriverAdapter);
 
+        // Set currently selected bus ID
+        String selectedBusId = busPreference.getSelectedBusId();
+        if (selectedBusId != null) {
+            busDriverAdapter.setSelectedBusId(selectedBusId);
+        }
+
+        // Handle card click - view details
         busDriverAdapter.setOnItemClickListener(busDriver -> {
             // Navigate to map with selected driver info
             Intent intent = new Intent(ParentDashboardActivity.this, MapActivity.class);
@@ -95,6 +102,19 @@ public class ParentDashboardActivity extends AppCompatActivity {
             intent.putExtra("BUS_NUMBER", busDriver.getBusNumber());
             intent.putExtra("DRIVER_NAME", busDriver.getDriverName());
             startActivity(intent);
+        });
+
+        // Handle "Set as my bus" button click
+        busDriverAdapter.setOnSetAsMyBusListener(busDriver -> {
+            // Save selected bus
+            busPreference.setSelectedBus(busDriver);
+
+            // Update adapter to show new selection
+            busDriverAdapter.setSelectedBusId(busDriver.getId());
+
+            Toast.makeText(this,
+                    "✓ " + busDriver.getBusNumber() + " set as your bus",
+                    Toast.LENGTH_SHORT).show();
         });
     }
 
@@ -189,8 +209,6 @@ public class ParentDashboardActivity extends AppCompatActivity {
     }
 
     private void showLoading(boolean show) {
-        // Implement loading indicator
-        // You can add a ProgressBar to your layout and show/hide it here
         if (progressBar != null) {
             progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
         }
@@ -206,7 +224,8 @@ public class ParentDashboardActivity extends AppCompatActivity {
             if (itemId == R.id.nav_home) {
                 return true;
             } else if (itemId == R.id.nav_buses) {
-                Toast.makeText(this, "Buses view coming soon!", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(ParentDashboardActivity.this, MyBusActivity.class);
+                startActivity(intent);
                 return true;
             } else if (itemId == R.id.nav_map) {
                 Intent intent = new Intent(ParentDashboardActivity.this, MapActivity.class);
@@ -226,7 +245,12 @@ public class ParentDashboardActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // Refresh data when returning to this activity
+        // Refresh selected bus ID when returning
+        String selectedBusId = busPreference.getSelectedBusId();
+        if (selectedBusId != null) {
+            busDriverAdapter.setSelectedBusId(selectedBusId);
+        }
+        // Refresh data
         loadDriversFromFirebase();
     }
 }

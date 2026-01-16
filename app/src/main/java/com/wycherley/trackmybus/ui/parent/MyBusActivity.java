@@ -19,7 +19,7 @@ public class MyBusActivity extends AppCompatActivity {
     private TextView tvBusNumber, tvDriverName, tvFromLocation, tvToLocation,
             tvPhoneNumber, tvEmail;
     private ImageView ivDriverProfile;
-    private Button btnSelectBus, btnTrackBus, btnChangebus;
+    private Button btnSelectBus, btnTrackBus, btnChangeBus;
     private BottomNavigationView bottomNavigation;
 
     private ParentBusPreference busPreference;

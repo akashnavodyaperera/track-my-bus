@@ -156,6 +156,8 @@
             android:screenOrientation="portrait"
             android:theme="@style/Theme.TrackMyBus" />
 
+        <activity android:name=".ui.parent.MyBusActivity" />
+
     </application>
 
 </manifest>
