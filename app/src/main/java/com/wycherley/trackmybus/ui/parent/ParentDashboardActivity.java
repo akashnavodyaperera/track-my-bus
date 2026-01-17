@@ -75,7 +75,8 @@ public class ParentDashboardActivity extends AppCompatActivity {
         });
 
         ivNotifications.setOnClickListener(v -> {
-            Toast.makeText(this, "Notifications coming soon!", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(ParentDashboardActivity.this, NotificationsActivity.class);
+            startActivity(intent);
         });
 
         ivSearch.setOnClickListener(v -> {
