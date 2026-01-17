@@ -1,67 +1,127 @@
 package com.wycherley.trackmybus.models;
 
 public class Notification {
-    private String notificationId;
-    private String userId;
+    private String id;
+    private String userId; // Parent user ID
     private String title;
     private String message;
-    private NotificationType type;
+    private String type; // "ARRIVAL", "DEPARTURE", "DELAY", "GENERAL"
     private long timestamp;
     private boolean isRead;
-    private String relatedBusId;
-    private String relatedRouteId;
+    private String busNumber;
+    private String driverName;
 
-    // No-argument constructor (required for Firebase)
+    // Empty constructor for Firebase
     public Notification() {
-        this.notificationId = "";
-        this.userId = "";
-        this.title = "";
-        this.message = "";
-        this.type = NotificationType.INFO;
         this.timestamp = System.currentTimeMillis();
         this.isRead = false;
-        this.relatedBusId = "";
-        this.relatedRouteId = "";
     }
 
-    // Constructor with parameters
-    public Notification(String notificationId, String userId, String title, String message, NotificationType type) {
-        this.notificationId = notificationId;
+    // Full constructor
+    public Notification(String userId, String title, String message, String type) {
         this.userId = userId;
         this.title = title;
         this.message = message;
         this.type = type;
         this.timestamp = System.currentTimeMillis();
         this.isRead = false;
-        this.relatedBusId = "";
-        this.relatedRouteId = "";
+    }
+
+    // Constructor with bus info
+    public Notification(String userId, String title, String message, String type,
+                        String busNumber, String driverName) {
+        this.userId = userId;
+        this.title = title;
+        this.message = message;
+        this.type = type;
+        this.busNumber = busNumber;
+        this.driverName = driverName;
+        this.timestamp = System.currentTimeMillis();
+        this.isRead = false;
     }
 
     // Getters and Setters
-    public String getNotificationId() { return notificationId; }
-    public void setNotificationId(String notificationId) { this.notificationId = notificationId; }
+    public String getId() {
+        return id;
+    }
 
-    public String getUserId() { return userId; }
-    public void setUserId(String userId) { this.userId = userId; }
+    public void setId(String id) {
+        this.id = id;
+    }
 
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
+    public String getUserId() {
+        return userId;
+    }
 
-    public String getMessage() { return message; }
-    public void setMessage(String message) { this.message = message; }
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
 
-    public NotificationType getType() { return type; }
-    public void setType(NotificationType type) { this.type = type; }
+    public String getTitle() {
+        return title;
+    }
 
-    public long getTimestamp() { return timestamp; }
-    public void setTimestamp(long timestamp) { this.timestamp = timestamp; }
+    public void setTitle(String title) {
+        this.title = title;
+    }
 
-    public boolean isRead() { return isRead; }
-    public void setRead(boolean read) { isRead = read; }
+    public String getMessage() {
+        return message;
+    }
 
-    public String getRelatedBusId() { return relatedBusId; }
-    public void setRelatedBusId(String relatedBusId) { this.relatedBusId = relatedBusId; }
+    public void setMessage(String message) {
+        this.message = message;
+    }
 
-    public String getRelatedRouteId() { return relatedRouteId; }
-    public void setRelatedRouteId(String relatedRouteId) { this.relatedRouteId = relatedRouteId; }
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public boolean isRead() {
+        return isRead;
+    }
+
+    public void setRead(boolean read) {
+        isRead = read;
+    }
+
+    public String getBusNumber() {
+        return busNumber;
+    }
+
+    public void setBusNumber(String busNumber) {
+        this.busNumber = busNumber;
+    }
+
+    public String getDriverName() {
+        return driverName;
+    }
+
+    public void setDriverName(String driverName) {
+        this.driverName = driverName;
+    }
+
+    // Get formatted date
+    public String getFormattedDate() {
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy/MM/dd", java.util.Locale.getDefault());
+        return sdf.format(new java.util.Date(timestamp));
+    }
+
+    // Get formatted time
+    public String getFormattedTime() {
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault());
+        return sdf.format(new java.util.Date(timestamp));
+    }
 }
