@@ -1,10 +1,28 @@
 package com.wycherley.trackmybus.ui.parent;
 
+import android.Manifest;
+import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.google.firebase.auth.FirebaseUser;
 import com.wycherley.trackmybus.R;
 import com.wycherley.trackmybus.repositories.AuthRepository;
@@ -12,12 +30,27 @@ import com.wycherley.trackmybus.repositories.UserRepository;
 import com.wycherley.trackmybus.models.User;
 import com.wycherley.trackmybus.ui.auth.LoginActivity;
 
-public class UserProfileActivity extends AppCompatActivity {
+import java.io.File;
+import java.io.IOException;
 
+public class UserProfileActivity extends AppCompatActivity {
     private TextView tvName, tvEmail, tvPhone, tvRole;
     private Button btnLogout;
+    private ImageView ivProfileImage;
+    private ImageButton btnEditPhoto;
+    private ProgressBar progressBar;
+
     private AuthRepository authRepository;
     private UserRepository userRepository;
+
+    private Uri imageUri;
+    private Uri cameraImageUri;
+
+    // Activity Result Launchers
+    private ActivityResultLauncher<String> galleryLauncher;
+    private ActivityResultLauncher<Uri> cameraLauncher;
+    private ActivityResultLauncher<String> cameraPermissionLauncher;
+    private ActivityResultLauncher<String> storagePermissionLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,8 +67,10 @@ public class UserProfileActivity extends AppCompatActivity {
         }
 
         initViews();
+        initActivityResultLaunchers();
         loadUserData();
         setupLogout();
+        setupPhotoEdit();
     }
 
     private void initViews() {
@@ -44,13 +79,63 @@ public class UserProfileActivity extends AppCompatActivity {
         tvPhone = findViewById(R.id.tvPhone);
         tvRole = findViewById(R.id.tvRole);
         btnLogout = findViewById(R.id.btnLogout);
+        ivProfileImage = findViewById(R.id.ivProfileImage);
+        btnEditPhoto = findViewById(R.id.btnEditPhoto);
+        progressBar = findViewById(R.id.progressBar);
+    }
+
+    private void initActivityResultLaunchers() {
+        // Gallery launcher
+        galleryLauncher = registerForActivityResult(
+                new ActivityResultContracts.GetContent(),
+                uri -> {
+                    if (uri != null) {
+                        imageUri = uri;
+                        uploadProfileImage(uri);
+                    }
+                }
+        );
+
+        // Camera launcher
+        cameraLauncher = registerForActivityResult(
+                new ActivityResultContracts.TakePicture(),
+                success -> {
+                    if (success && cameraImageUri != null) {
+                        imageUri = cameraImageUri;
+                        uploadProfileImage(cameraImageUri);
+                    }
+                }
+        );
+
+        // Camera permission launcher
+        cameraPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(),
+                isGranted -> {
+                    if (isGranted) {
+                        openCamera();
+                    } else {
+                        Toast.makeText(this, "Camera permission is required", Toast.LENGTH_SHORT).show();
+                    }
+                }
+        );
+
+        // Storage permission launcher
+        storagePermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(),
+                isGranted -> {
+                    if (isGranted) {
+                        openGallery();
+                    } else {
+                        Toast.makeText(this, "Storage permission is required", Toast.LENGTH_SHORT).show();
+                    }
+                }
+        );
     }
 
     private void loadUserData() {
         FirebaseUser firebaseUser = authRepository.getCurrentUser();
         if (firebaseUser != null) {
             String userId = firebaseUser.getUid();
-
             userRepository.getUserById(userId, new UserRepository.OnUserLoadListener() {
                 @Override
                 public void onUserLoaded(User user) {
@@ -58,14 +143,150 @@ public class UserProfileActivity extends AppCompatActivity {
                     tvEmail.setText(user.getEmail());
                     tvPhone.setText(user.getPhoneNumber());
                     tvRole.setText("Role: " + user.getRole().toString());
+
+                    // Load profile image
+                    loadProfileImage(user.getProfileImageUrl());
                 }
 
                 @Override
                 public void onError(String error) {
-                    // Handle error
+                    Toast.makeText(UserProfileActivity.this, error, Toast.LENGTH_SHORT).show();
                 }
             });
         }
+    }
+
+    private void loadProfileImage(String imageUrl) {
+        if (imageUrl != null && !imageUrl.isEmpty()) {
+            Glide.with(this)
+                    .load(imageUrl)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .placeholder(R.drawable.ic_person_placeholder)
+                    .error(R.drawable.ic_person_placeholder)
+                    .circleCrop()
+                    .into(ivProfileImage);
+        } else {
+            ivProfileImage.setImageResource(R.drawable.ic_person_placeholder);
+        }
+    }
+
+    private void setupPhotoEdit() {
+        btnEditPhoto.setOnClickListener(v -> showImagePickerDialog());
+    }
+
+    private void showImagePickerDialog() {
+        String[] options = {"Take Photo", "Choose from Gallery", "Remove Photo"};
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Profile Photo")
+                .setItems(options, (dialog, which) -> {
+                    switch (which) {
+                        case 0: // Camera
+                            checkCameraPermissionAndOpen();
+                            break;
+                        case 1: // Gallery
+                            checkStoragePermissionAndOpen();
+                            break;
+                        case 2: // Remove
+                            removeProfilePhoto();
+                            break;
+                    }
+                });
+        builder.show();
+    }
+
+    private void checkCameraPermissionAndOpen() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                == PackageManager.PERMISSION_GRANTED) {
+            openCamera();
+        } else {
+            cameraPermissionLauncher.launch(Manifest.permission.CAMERA);
+        }
+    }
+
+    private void checkStoragePermissionAndOpen() {
+        // For Android 13+ (API 33+), we don't need READ_EXTERNAL_STORAGE
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            openGallery();
+        } else {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_GRANTED) {
+                openGallery();
+            } else {
+                storagePermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE);
+            }
+        }
+    }
+
+    private void openCamera() {
+        try {
+            File photoFile = createImageFile();
+            cameraImageUri = FileProvider.getUriForFile(this,
+                    getApplicationContext().getPackageName() + ".fileprovider",
+                    photoFile);
+            cameraLauncher.launch(cameraImageUri);
+        } catch (IOException e) {
+            Toast.makeText(this, "Error creating image file", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private File createImageFile() throws IOException {
+        String imageFileName = "profile_" + System.currentTimeMillis();
+        File storageDir = getExternalFilesDir("Pictures");
+        return File.createTempFile(imageFileName, ".jpg", storageDir);
+    }
+
+    private void openGallery() {
+        galleryLauncher.launch("image/*");
+    }
+
+    private void uploadProfileImage(Uri imageUri) {
+        FirebaseUser firebaseUser = authRepository.getCurrentUser();
+        if (firebaseUser == null) return;
+
+        String userId = firebaseUser.getUid();
+        progressBar.setVisibility(View.VISIBLE);
+        btnEditPhoto.setEnabled(false);
+
+        userRepository.uploadProfileImage(userId, imageUri, new UserRepository.OnImageUploadListener() {
+            @Override
+            public void onSuccess(String imageUrl) {
+                progressBar.setVisibility(View.GONE);
+                btnEditPhoto.setEnabled(true);
+                loadProfileImage(imageUrl);
+                Toast.makeText(UserProfileActivity.this, "Profile photo updated", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onFailure(String error) {
+                progressBar.setVisibility(View.GONE);
+                btnEditPhoto.setEnabled(true);
+                Toast.makeText(UserProfileActivity.this, "Failed to upload photo: " + error, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void removeProfilePhoto() {
+        FirebaseUser firebaseUser = authRepository.getCurrentUser();
+        if (firebaseUser == null) return;
+
+        String userId = firebaseUser.getUid();
+        progressBar.setVisibility(View.VISIBLE);
+
+        userRepository.removeProfileImage(userId, new UserRepository.OnUpdateCompleteListener() {
+            @Override
+            public void onSuccess(String message) {
+                progressBar.setVisibility(View.GONE);
+                ivProfileImage.setImageResource(R.drawable.ic_person_placeholder);
+                Toast.makeText(UserProfileActivity.this, "Profile photo removed", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onFailure(String error) {
+                progressBar.setVisibility(View.GONE);
+                Toast.makeText(UserProfileActivity.this, "Failed to remove photo", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void setupLogout() {
