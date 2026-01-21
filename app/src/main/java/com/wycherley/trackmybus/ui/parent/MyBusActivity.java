@@ -2,18 +2,23 @@ package com.wycherley.trackmybus.ui.parent;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.wycherley.trackmybus.R;
 import com.wycherley.trackmybus.models.BusDriver;
-import com.wycherley.trackmybus.utils.ParentBusPreference;
+import com.wycherley.trackmybus.repositories.AuthRepository;
+import com.wycherley.trackmybus.repositories.BusDriverRepository;
+import com.wycherley.trackmybus.repositories.UserRepository;
 
 public class MyBusActivity extends AppCompatActivity {
+    private static final String TAG = "MyBusActivity";
 
     private LinearLayout layoutNoBus, layoutBusDetails;
     private TextView tvBusNumber, tvDriverName, tvFromLocation, tvToLocation,
@@ -22,7 +27,9 @@ public class MyBusActivity extends AppCompatActivity {
     private Button btnSelectBus, btnTrackBus, btnChangeBus;
     private BottomNavigationView bottomNavigation;
 
-    private ParentBusPreference busPreference;
+    private UserRepository userRepository;
+    private BusDriverRepository busDriverRepository;
+    private String currentUserId;
     private BusDriver selectedBus;
 
     @Override
@@ -34,10 +41,13 @@ public class MyBusActivity extends AppCompatActivity {
             getSupportActionBar().hide();
         }
 
-        busPreference = new ParentBusPreference(this);
+        // Initialize repositories
+        userRepository = UserRepository.getInstance();
+        busDriverRepository = BusDriverRepository.getInstance();
+        currentUserId = AuthRepository.getInstance().getCurrentUser().getUid();
 
         initViews();
-        loadSelectedBus();
+        loadMyBusFromFirebase(); // Load from Firebase instead of SharedPreferences
         setupBottomNavigation();
     }
 
@@ -57,14 +67,59 @@ public class MyBusActivity extends AppCompatActivity {
         bottomNavigation = findViewById(R.id.bottomNavigation);
     }
 
-    private void loadSelectedBus() {
-        selectedBus = busPreference.getSelectedBus();
+    private void loadMyBusFromFirebase() {
+        Log.d(TAG, "Loading My Bus from Firebase...");
 
-        if (selectedBus != null) {
-            showBusDetails();
-        } else {
-            showNoBusSelected();
-        }
+        // First, get the bus ID from Firebase
+        userRepository.getMyBusId(currentUserId, new UserRepository.OnMyBusLoadListener() {
+            @Override
+            public void onMyBusLoaded(String busDriverId) {
+                Log.d(TAG, "✅ My Bus ID: " + busDriverId);
+
+                // Then load the full bus driver details
+                loadBusDriverDetails(busDriverId);
+            }
+
+            @Override
+            public void onNoBusAssigned() {
+                Log.d(TAG, "No bus assigned");
+                showNoBusSelected();
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.e(TAG, "❌ Error loading My Bus: " + error);
+                showNoBusSelected();
+                Toast.makeText(MyBusActivity.this,
+                        "Error loading bus", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void loadBusDriverDetails(String busDriverId) {
+        // Load all drivers and find the one with matching ID
+        busDriverRepository.getDriversOnce(new BusDriverRepository.OnDriversLoadListener() {
+            @Override
+            public void onDriversLoaded(java.util.List<BusDriver> drivers) {
+                for (BusDriver driver : drivers) {
+                    if (driver.getId().equals(busDriverId)) {
+                        selectedBus = driver;
+                        Log.d(TAG, "✅ Bus details loaded: " + driver.getBusNumber());
+                        showBusDetails();
+                        return;
+                    }
+                }
+                // Bus not found
+                Log.e(TAG, "❌ Bus driver not found in database");
+                showNoBusSelected();
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.e(TAG, "❌ Error loading bus details: " + error);
+                showNoBusSelected();
+            }
+        });
     }
 
     private void showBusDetails() {
@@ -147,6 +202,7 @@ public class MyBusActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        loadSelectedBus();
+        // Reload from Firebase when returning to this screen
+        loadMyBusFromFirebase();
     }
 }
