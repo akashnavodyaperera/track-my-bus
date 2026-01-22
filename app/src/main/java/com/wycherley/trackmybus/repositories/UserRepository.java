@@ -1,5 +1,6 @@
 package com.wycherley.trackmybus.repositories;
 
+import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
 
@@ -11,10 +12,9 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
 import com.wycherley.trackmybus.models.User;
 import com.wycherley.trackmybus.utils.Constants;
+import com.wycherley.trackmybus.utils.ImageHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,17 +23,10 @@ public class UserRepository {
     private static final String TAG = "UserRepository";
     private static UserRepository instance;
     private DatabaseReference usersRef;
-    private StorageReference storageRef;
 
     private UserRepository() {
         usersRef = FirebaseDatabase.getInstance().getReference(Constants.USERS_REF);
-
-        try {
-            storageRef = FirebaseStorage.getInstance().getReference();
-            Log.d(TAG, "Firebase Storage initialized");
-        } catch (Exception e) {
-            Log.e(TAG, "Failed to initialize Firebase Storage", e);
-        }
+        Log.d(TAG, "UserRepository initialized");
     }
 
     public static synchronized UserRepository getInstance() {
@@ -79,71 +72,98 @@ public class UserRepository {
                 });
     }
 
-    // ==================== PROFILE IMAGE METHODS ====================
+    // ==================== PROFILE IMAGE METHODS (BASE64 - NO STORAGE NEEDED) ====================
 
-    // Upload profile image to Firebase Storage
-    public void uploadProfileImage(String userId, Uri imageUri, OnImageUploadListener listener) {
-        if (storageRef == null) {
-            listener.onFailure("Firebase Storage not initialized. Enable it in Firebase Console.");
+    /**
+     * Upload profile image as Base64 (NO Firebase Storage needed - 100% FREE!)
+     * Stores image directly in Realtime Database
+     */
+    public void uploadProfileImageBase64(Context context, String userId, Uri imageUri,
+                                         OnImageUploadListener listener) {
+        Log.d(TAG, "Converting image to Base64...");
+
+        // Convert image to Base64 string
+        String base64Image = ImageHelper.imageUriToBase64(context, imageUri);
+
+        if (base64Image == null) {
+            listener.onFailure("Failed to process image");
             return;
         }
 
-        Log.d(TAG, "Uploading image for user: " + userId);
-        StorageReference profileImagesRef = storageRef.child("profile_images/" + userId + ".jpg");
+        // Check size (Firebase Realtime Database has 1MB limit per value)
+        int sizeKB = ImageHelper.getBase64SizeKB(base64Image);
+        Log.d(TAG, "Base64 image size: " + sizeKB + " KB");
 
-        profileImagesRef.putFile(imageUri)
-                .addOnSuccessListener(taskSnapshot -> {
-                    profileImagesRef.getDownloadUrl()
-                            .addOnSuccessListener(uri -> {
-                                String imageUrl = uri.toString();
-                                updateProfileImageUrl(userId, imageUrl, listener);
-                            })
-                            .addOnFailureListener(e -> {
-                                Log.e(TAG, "Failed to get download URL", e);
-                                listener.onFailure(e.getMessage());
-                            });
+        if (sizeKB > 900) { // Leave some margin below 1MB limit
+            listener.onFailure("Image too large (" + sizeKB + " KB). Please use a smaller image.");
+            return;
+        }
+
+        Log.d(TAG, "Uploading Base64 image to database...");
+
+        // Save Base64 string to database
+        usersRef.child(userId).child("profileImageBase64").setValue(base64Image)
+                .addOnSuccessListener(aVoid -> {
+                    Log.d(TAG, "✅ Profile image saved to database");
+                    listener.onSuccess(base64Image);
                 })
                 .addOnFailureListener(e -> {
-                    Log.e(TAG, "Failed to upload image", e);
+                    Log.e(TAG, "❌ Failed to save image", e);
                     listener.onFailure(e.getMessage());
                 });
     }
 
-    // Update profile image URL in database
-    private void updateProfileImageUrl(String userId, String imageUrl, OnImageUploadListener listener) {
-        usersRef.child(userId).child("profileImageUrl").setValue(imageUrl)
-                .addOnSuccessListener(aVoid -> {
-                    Log.d(TAG, "Profile image URL updated");
-                    listener.onSuccess(imageUrl);
+    /**
+     * Load profile image Base64 from database
+     */
+    public void loadProfileImageBase64(String userId, OnBase64LoadListener listener) {
+        Log.d(TAG, "Loading profile image from database...");
+
+        usersRef.child(userId).child("profileImageBase64").get()
+                .addOnSuccessListener(snapshot -> {
+                    if (snapshot.exists() && snapshot.getValue() != null) {
+                        String base64Image = snapshot.getValue(String.class);
+                        if (base64Image != null && !base64Image.isEmpty()) {
+                            Log.d(TAG, "✅ Profile image loaded (" +
+                                    ImageHelper.getBase64SizeKB(base64Image) + " KB)");
+                            listener.onImageLoaded(base64Image);
+                        } else {
+                            Log.d(TAG, "Profile image is empty");
+                            listener.onNoImage();
+                        }
+                    } else {
+                        Log.d(TAG, "No profile image found");
+                        listener.onNoImage();
+                    }
                 })
                 .addOnFailureListener(e -> {
-                    Log.e(TAG, "Failed to update profile image URL", e);
-                    listener.onFailure(e.getMessage());
+                    Log.e(TAG, "❌ Failed to load image", e);
+                    listener.onError(e.getMessage());
                 });
     }
 
-    // Remove profile image
-    public void removeProfileImage(String userId, OnUpdateCompleteListener listener) {
-        StorageReference profileImageRef = storageRef.child("profile_images/" + userId + ".jpg");
-        profileImageRef.delete()
+    /**
+     * Remove profile image from database
+     */
+    public void removeProfileImageBase64(String userId, OnUpdateCompleteListener listener) {
+        Log.d(TAG, "Removing profile image...");
+
+        usersRef.child(userId).child("profileImageBase64").removeValue()
                 .addOnSuccessListener(aVoid -> {
-                    usersRef.child(userId).child("profileImageUrl").setValue("")
-                            .addOnSuccessListener(aVoid2 -> {
-                                Log.d(TAG, "Profile image removed");
-                                listener.onSuccess("Image removed");
-                            })
-                            .addOnFailureListener(e -> listener.onFailure(e.getMessage()));
+                    Log.d(TAG, "✅ Profile image removed");
+                    listener.onSuccess("Image removed");
                 })
                 .addOnFailureListener(e -> {
-                    usersRef.child(userId).child("profileImageUrl").setValue("")
-                            .addOnSuccessListener(aVoid2 -> listener.onSuccess("Image removed"))
-                            .addOnFailureListener(e2 -> listener.onFailure(e2.getMessage()));
+                    Log.e(TAG, "❌ Failed to remove image", e);
+                    listener.onFailure(e.getMessage());
                 });
     }
 
     // ==================== MY BUS METHODS (PARENT) ====================
 
-    // Set "My Bus" for parent (saves to Firebase)
+    /**
+     * Set "My Bus" for parent (saves to Firebase)
+     */
     public void setMyBus(String userId, String busDriverId, OnUpdateCompleteListener listener) {
         Log.d(TAG, "Setting My Bus: " + busDriverId + " for user: " + userId);
 
@@ -161,7 +181,9 @@ public class UserRepository {
                 });
     }
 
-    // Get "My Bus" ID for parent
+    /**
+     * Get "My Bus" ID for parent
+     */
     public void getMyBusId(String userId, OnMyBusLoadListener listener) {
         Log.d(TAG, "Getting My Bus for user: " + userId);
 
@@ -196,7 +218,9 @@ public class UserRepository {
                 });
     }
 
-    // Remove "My Bus" assignment
+    /**
+     * Remove "My Bus" assignment
+     */
     public void removeMyBus(String userId, OnUpdateCompleteListener listener) {
         Log.d(TAG, "Removing My Bus for user: " + userId);
 
@@ -211,7 +235,9 @@ public class UserRepository {
                 });
     }
 
-    // Check if user has My Bus assigned
+    /**
+     * Check if user has My Bus assigned
+     */
     public void hasMyBus(String userId, OnMyBusCheckListener listener) {
         usersRef.child(userId).child("assignedBusIds").get()
                 .addOnSuccessListener(snapshot -> {
@@ -251,6 +277,12 @@ public class UserRepository {
     public interface OnImageUploadListener {
         void onSuccess(String imageUrl);
         void onFailure(String error);
+    }
+
+    public interface OnBase64LoadListener {
+        void onImageLoaded(String base64Image);
+        void onNoImage();
+        void onError(String error);
     }
 
     public interface OnMyBusLoadListener {
