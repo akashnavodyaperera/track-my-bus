@@ -4,9 +4,10 @@ import android.Manifest;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -21,19 +22,20 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.google.firebase.auth.FirebaseUser;
 import com.wycherley.trackmybus.R;
 import com.wycherley.trackmybus.repositories.AuthRepository;
 import com.wycherley.trackmybus.repositories.UserRepository;
 import com.wycherley.trackmybus.models.User;
 import com.wycherley.trackmybus.ui.auth.LoginActivity;
+import com.wycherley.trackmybus.utils.ImageHelper;
 
 import java.io.File;
 import java.io.IOException;
 
 public class UserProfileActivity extends AppCompatActivity {
+    private static final String TAG = "UserProfileActivity";
+
     private TextView tvName, tvEmail, tvPhone, tvRole;
     private Button btnLogout;
     private ImageView ivProfileImage;
@@ -144,8 +146,8 @@ public class UserProfileActivity extends AppCompatActivity {
                     tvPhone.setText(user.getPhoneNumber());
                     tvRole.setText("Role: " + user.getRole().toString());
 
-                    // Load profile image
-                    loadProfileImage(user.getProfileImageUrl());
+                    // Load profile image from Base64
+                    loadProfileImageFromDatabase(userId);
                 }
 
                 @Override
@@ -156,15 +158,41 @@ public class UserProfileActivity extends AppCompatActivity {
         }
     }
 
-    private void loadProfileImage(String imageUrl) {
-        if (imageUrl != null && !imageUrl.isEmpty()) {
-            Glide.with(this)
-                    .load(imageUrl)
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .placeholder(R.drawable.ic_person_placeholder)
-                    .error(R.drawable.ic_person_placeholder)
-                    .circleCrop()
-                    .into(ivProfileImage);
+    private void loadProfileImageFromDatabase(String userId) {
+        Log.d(TAG, "Loading profile image from database...");
+
+        userRepository.loadProfileImageBase64(userId,
+                new UserRepository.OnBase64LoadListener() {
+                    @Override
+                    public void onImageLoaded(String base64Image) {
+                        Log.d(TAG, "✅ Profile image loaded from database");
+                        displayBase64Image(base64Image);
+                    }
+
+                    @Override
+                    public void onNoImage() {
+                        Log.d(TAG, "No profile image found");
+                        ivProfileImage.setImageResource(R.drawable.ic_person_placeholder);
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        Log.e(TAG, "❌ Failed to load image: " + error);
+                        ivProfileImage.setImageResource(R.drawable.ic_person_placeholder);
+                    }
+                });
+    }
+
+    private void displayBase64Image(String base64Image) {
+        if (base64Image != null && !base64Image.isEmpty()) {
+            Bitmap bitmap = ImageHelper.base64ToBitmap(base64Image);
+            if (bitmap != null) {
+                ivProfileImage.setImageBitmap(bitmap);
+                Log.d(TAG, "Image displayed successfully");
+            } else {
+                Log.e(TAG, "Failed to convert Base64 to Bitmap");
+                ivProfileImage.setImageResource(R.drawable.ic_person_placeholder);
+            }
         } else {
             ivProfileImage.setImageResource(R.drawable.ic_person_placeholder);
         }
@@ -248,22 +276,36 @@ public class UserProfileActivity extends AppCompatActivity {
         progressBar.setVisibility(View.VISIBLE);
         btnEditPhoto.setEnabled(false);
 
-        userRepository.uploadProfileImage(userId, imageUri, new UserRepository.OnImageUploadListener() {
-            @Override
-            public void onSuccess(String imageUrl) {
-                progressBar.setVisibility(View.GONE);
-                btnEditPhoto.setEnabled(true);
-                loadProfileImage(imageUrl);
-                Toast.makeText(UserProfileActivity.this, "Profile photo updated", Toast.LENGTH_SHORT).show();
-            }
+        Log.d(TAG, "Starting image upload (Base64)...");
 
-            @Override
-            public void onFailure(String error) {
-                progressBar.setVisibility(View.GONE);
-                btnEditPhoto.setEnabled(true);
-                Toast.makeText(UserProfileActivity.this, "Failed to upload photo: " + error, Toast.LENGTH_SHORT).show();
-            }
-        });
+        // Use Base64 upload method (NO Firebase Storage needed)
+        userRepository.uploadProfileImageBase64(this, userId, imageUri,
+                new UserRepository.OnImageUploadListener() {
+                    @Override
+                    public void onSuccess(String base64Image) {
+                        progressBar.setVisibility(View.GONE);
+                        btnEditPhoto.setEnabled(true);
+
+                        Log.d(TAG, "✅ Profile photo uploaded successfully");
+
+                        // Display the image
+                        displayBase64Image(base64Image);
+
+                        Toast.makeText(UserProfileActivity.this,
+                                "Profile photo updated", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onFailure(String error) {
+                        progressBar.setVisibility(View.GONE);
+                        btnEditPhoto.setEnabled(true);
+
+                        Log.e(TAG, "❌ Failed to upload photo: " + error);
+
+                        Toast.makeText(UserProfileActivity.this,
+                                "Failed to upload photo: " + error, Toast.LENGTH_LONG).show();
+                    }
+                });
     }
 
     private void removeProfilePhoto() {
@@ -273,20 +315,30 @@ public class UserProfileActivity extends AppCompatActivity {
         String userId = firebaseUser.getUid();
         progressBar.setVisibility(View.VISIBLE);
 
-        userRepository.removeProfileImage(userId, new UserRepository.OnUpdateCompleteListener() {
-            @Override
-            public void onSuccess(String message) {
-                progressBar.setVisibility(View.GONE);
-                ivProfileImage.setImageResource(R.drawable.ic_person_placeholder);
-                Toast.makeText(UserProfileActivity.this, "Profile photo removed", Toast.LENGTH_SHORT).show();
-            }
+        Log.d(TAG, "Removing profile photo...");
 
-            @Override
-            public void onFailure(String error) {
-                progressBar.setVisibility(View.GONE);
-                Toast.makeText(UserProfileActivity.this, "Failed to remove photo", Toast.LENGTH_SHORT).show();
-            }
-        });
+        // Remove Base64 image from database
+        userRepository.removeProfileImageBase64(userId,
+                new UserRepository.OnUpdateCompleteListener() {
+                    @Override
+                    public void onSuccess(String message) {
+                        progressBar.setVisibility(View.GONE);
+                        ivProfileImage.setImageResource(R.drawable.ic_person_placeholder);
+
+                        Log.d(TAG, "✅ Profile photo removed");
+                        Toast.makeText(UserProfileActivity.this,
+                                "Profile photo removed", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onFailure(String error) {
+                        progressBar.setVisibility(View.GONE);
+
+                        Log.e(TAG, "❌ Failed to remove photo: " + error);
+                        Toast.makeText(UserProfileActivity.this,
+                                "Failed to remove photo", Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 
     private void setupLogout() {
