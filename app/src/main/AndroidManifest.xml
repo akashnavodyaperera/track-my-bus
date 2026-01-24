@@ -119,8 +119,16 @@
             android:name=".ui.parent.UserProfileActivity"
             android:exported="false"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.TrackMyBus"
+            android:theme="@style/Theme.TrackMyBus.NoActionBar"
             android:parentActivityName=".ui.parent.ParentDashboardActivity" />
+
+        <!-- Edit Profile Activity -->
+        <activity
+            android:name=".ui.parent.EditProfileActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.TrackMyBus.NoActionBar"
+            android:parentActivityName=".ui.parent.UserProfileActivity" />
 
         <!-- Map Activity -->
         <activity
