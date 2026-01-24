@@ -37,7 +37,7 @@ public class UserProfileActivity extends AppCompatActivity {
     private static final String TAG = "UserProfileActivity";
 
     private TextView tvName, tvEmail, tvPhone, tvRole;
-    private Button btnLogout;
+    private Button btnLogout, btnEditProfile;
     private ImageView ivProfileImage;
     private ImageButton btnEditPhoto;
     private ProgressBar progressBar;
@@ -81,6 +81,7 @@ public class UserProfileActivity extends AppCompatActivity {
         tvPhone = findViewById(R.id.tvPhone);
         tvRole = findViewById(R.id.tvRole);
         btnLogout = findViewById(R.id.btnLogout);
+        btnEditProfile = findViewById(R.id.btnEditProfile);
         ivProfileImage = findViewById(R.id.ivProfileImage);
         btnEditPhoto = findViewById(R.id.btnEditPhoto);
         progressBar = findViewById(R.id.progressBar);
@@ -342,6 +343,11 @@ public class UserProfileActivity extends AppCompatActivity {
     }
 
     private void setupLogout() {
+        btnEditProfile.setOnClickListener(v -> {
+            Intent intent = new Intent(UserProfileActivity.this, EditProfileActivity.class);
+            startActivityForResult(intent, 100);
+        });
+
         btnLogout.setOnClickListener(v -> {
             authRepository.signOut();
             Intent intent = new Intent(UserProfileActivity.this, LoginActivity.class);
@@ -349,6 +355,15 @@ public class UserProfileActivity extends AppCompatActivity {
             startActivity(intent);
             finish();
         });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 100 && resultCode == RESULT_OK) {
+            // Refresh user data after editing
+            loadUserData();
+        }
     }
 
     @Override
