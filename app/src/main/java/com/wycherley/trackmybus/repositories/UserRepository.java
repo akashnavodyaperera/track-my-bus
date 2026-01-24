@@ -102,13 +102,32 @@ public class UserRepository {
         Log.d(TAG, "Uploading Base64 image to database...");
 
         // Save Base64 string to database
+        updateProfileImageBase64(userId, base64Image, new OnUpdateCompleteListener() {
+            @Override
+            public void onSuccess(String message) {
+                Log.d(TAG, "✅ Profile image saved to database");
+                listener.onSuccess(base64Image);
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Log.e(TAG, "❌ Failed to save image: " + error);
+                listener.onFailure(error);
+            }
+        });
+    }
+
+    /**
+     * Update profile image Base64 string directly
+     */
+    public void updateProfileImageBase64(String userId, String base64Image, OnUpdateCompleteListener listener) {
         usersRef.child(userId).child("profileImageBase64").setValue(base64Image)
                 .addOnSuccessListener(aVoid -> {
-                    Log.d(TAG, "✅ Profile image saved to database");
-                    listener.onSuccess(base64Image);
+                    Log.d(TAG, "✅ Profile image updated in database");
+                    listener.onSuccess("Image updated");
                 })
                 .addOnFailureListener(e -> {
-                    Log.e(TAG, "❌ Failed to save image", e);
+                    Log.e(TAG, "❌ Failed to update image", e);
                     listener.onFailure(e.getMessage());
                 });
     }

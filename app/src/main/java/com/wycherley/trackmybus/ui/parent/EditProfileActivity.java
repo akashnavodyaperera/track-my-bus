@@ -386,24 +386,28 @@ public class EditProfileActivity extends AppCompatActivity {
                         }
                     });
         } else {
-            // Save new image
-            userRepository.usersRef.child(currentUserId).child("profileImageBase64")
-                    .setValue(newProfileImageBase64)
-                    .addOnSuccessListener(aVoid -> {
-                        showLoading(false);
-                        btnSave.setEnabled(true);
-                        Toast.makeText(EditProfileActivity.this,
-                                "Profile updated successfully!", Toast.LENGTH_SHORT).show();
-                        setResult(RESULT_OK);
-                        finish();
-                    })
-                    .addOnFailureListener(e -> {
-                        showLoading(false);
-                        btnSave.setEnabled(true);
-                        Toast.makeText(EditProfileActivity.this,
-                                "Profile updated but failed to save photo", Toast.LENGTH_SHORT).show();
-                        setResult(RESULT_OK);
-                        finish();
+            // Save new image using the repository method instead of accessing private usersRef
+            userRepository.updateProfileImageBase64(currentUserId, newProfileImageBase64,
+                    new UserRepository.OnUpdateCompleteListener() {
+                        @Override
+                        public void onSuccess(String message) {
+                            showLoading(false);
+                            btnSave.setEnabled(true);
+                            Toast.makeText(EditProfileActivity.this,
+                                    "Profile updated successfully!", Toast.LENGTH_SHORT).show();
+                            setResult(RESULT_OK);
+                            finish();
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+                            showLoading(false);
+                            btnSave.setEnabled(true);
+                            Toast.makeText(EditProfileActivity.this,
+                                    "Profile updated but failed to save photo: " + error, Toast.LENGTH_SHORT).show();
+                            setResult(RESULT_OK);
+                            finish();
+                        }
                     });
         }
     }
