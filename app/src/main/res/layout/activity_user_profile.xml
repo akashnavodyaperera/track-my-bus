@@ -95,6 +95,18 @@
             android:padding="12dp"
             android:layout_marginBottom="48dp" />
 
+        <!-- Edit Profile Button -->
+        <Button
+            android:id="@+id/btnEditProfile"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="Edit Profile"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/white"
+            android:backgroundTint="@color/primary_blue"
+            android:layout_marginBottom="12dp" />
+
         <!-- Logout Button -->
         <Button
             android:id="@+id/btnLogout"
