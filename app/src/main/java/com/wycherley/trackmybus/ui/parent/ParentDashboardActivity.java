@@ -305,7 +305,9 @@ public class ParentDashboardActivity extends AppCompatActivity {
                 Toast.makeText(this, "Feedback coming soon!", Toast.LENGTH_SHORT).show();
                 return true;
             } else if (itemId == R.id.nav_about) {
-                Toast.makeText(this, "About coming soon!", Toast.LENGTH_SHORT).show();
+                // Navigate to About Activity
+                Intent intent = new Intent(ParentDashboardActivity.this, AboutActivity.class);
+                startActivity(intent);
                 return true;
             }
             return false;
