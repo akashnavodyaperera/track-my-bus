@@ -73,6 +73,7 @@ public class BusDriverAdapter extends RecyclerView.Adapter<BusDriverAdapter.View
         TextView tvBusNumber, tvDriverName, tvFromLocation, tvToLocation;
         ImageView ivDriverProfile;
         Button btnSetAsMyBus;
+        TextView tvRating;
 
         ViewHolder(View itemView) {
             super(itemView);
@@ -82,6 +83,7 @@ public class BusDriverAdapter extends RecyclerView.Adapter<BusDriverAdapter.View
             tvToLocation = itemView.findViewById(R.id.tvToLocation);
             ivDriverProfile = itemView.findViewById(R.id.ivDriverProfile);
             btnSetAsMyBus = itemView.findViewById(R.id.btnSetAsMyBus);
+            tvRating = itemView.findViewById(R.id.tvRating);
         }
 
         void bind(BusDriver driver, boolean isSelected,
@@ -90,6 +92,17 @@ public class BusDriverAdapter extends RecyclerView.Adapter<BusDriverAdapter.View
             tvDriverName.setText(driver.getDriverName());
             tvFromLocation.setText(driver.getFromLocation());
             tvToLocation.setText(driver.getToLocation());
+
+            // Display star rating
+            if (driver.getTotalRatings() > 0) {
+                String ratingText = driver.getStarString() + " (" +
+                        String.format("%.1f", driver.getAverageRating()) + ")";
+                tvRating.setText(ratingText);
+                tvRating.setVisibility(View.VISIBLE);
+            } else {
+                tvRating.setText("No ratings yet");
+                tvRating.setVisibility(View.VISIBLE);
+            }
 
             // Update button based on selection state
             if (isSelected) {
