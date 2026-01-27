@@ -151,8 +151,9 @@
                             android:textColor="@android:color/white"
                             android:layout_marginTop="8dp" />
 
-                        <!-- Stars -->
+                        <!-- Stars - THIS IS THE NEW ELEMENT -->
                         <TextView
+                            android:id="@+id/tvStarRating"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="⭐⭐⭐⭐⭐"
@@ -228,6 +229,52 @@
                         </RelativeLayout>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
+
+                <!-- Rating Section -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Rate This Driver"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@android:color/black"
+                    android:layout_marginBottom="12dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="24dp">
+
+                    <RatingBar
+                        android:id="@+id/ratingBar"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:numStars="5"
+                        android:stepSize="1"
+                        android:rating="0"
+                        android:layout_marginEnd="12dp" />
+
+                    <Button
+                        android:id="@+id/btnSubmitRating"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Submit"
+                        android:textColor="@android:color/white"
+                        android:backgroundTint="@color/primary_blue"
+                        android:paddingStart="24dp"
+                        android:paddingEnd="24dp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvRatingInfo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Average: 4.5⭐ (120 ratings)"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_gray"
+                    android:layout_marginBottom="24dp" />
 
                 <!-- Contact Information -->
                 <TextView
