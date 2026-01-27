@@ -56,17 +56,22 @@
                         android:textStyle="bold" />
 
                     <!-- Star Rating -->
+                    <!-- Rating Display -->
+                    <TextView
+                        android:id="@+id/tvRating"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="⭐⭐⭐⭐⭐"
+                        android:textSize="14sp"
+                        android:layout_marginStart="4dp" />
+
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:layout_marginTop="4dp">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="⭐⭐⭐⭐⭐"
-                            android:textSize="12sp" />
+                        <!-- Rating Display -->
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
