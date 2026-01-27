@@ -9,7 +9,9 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.wycherley.trackmybus.models.BusDriver;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class BusDriverRepository {
     private static final String TAG = "BusDriverRepository";
@@ -139,6 +141,71 @@ public class BusDriverRepository {
                     Log.e(TAG, "Error deleting driver: " + e.getMessage());
                     listener.onError(e.getMessage());
                 });
+    }
+
+
+    public void rateDriver(String driverId, String userId, int rating, OnDriverSaveListener listener) {
+        if (rating < 1 || rating > 5) {
+            listener.onError("Rating must be between 1 and 5");
+            return;
+        }
+
+        driversRef.child(driverId).get().addOnSuccessListener(snapshot -> {
+            if (snapshot.exists()) {
+                BusDriver driver = snapshot.getValue(BusDriver.class);
+                if (driver != null) {
+                    // Get existing ratings
+                    Map<String, Integer> userRatings = driver.getUserRatings();
+                    if (userRatings == null) {
+                        userRatings = new HashMap<>();
+                    }
+
+                    // Add/update user's rating
+                    userRatings.put(userId, rating);
+
+                    // Calculate new average
+                    int total = 0;
+                    for (Integer r : userRatings.values()) {
+                        total += r;
+                    }
+                    double average = (double) total / userRatings.size();
+
+                    // Update driver
+                    driver.setUserRatings(userRatings);
+                    driver.setAverageRating(Math.round(average * 10.0) / 10.0); // Round to 1 decimal
+                    driver.setTotalRatings(userRatings.size());
+
+                    // Save to Firebase
+                    driversRef.child(driverId).setValue(driver)
+                            .addOnSuccessListener(aVoid -> listener.onSuccess())
+                            .addOnFailureListener(e -> listener.onError(e.getMessage()));
+                }
+            } else {
+                listener.onError("Driver not found");
+            }
+        }).addOnFailureListener(e -> listener.onError(e.getMessage()));
+    }
+
+    /**
+     * Get user's rating for a driver
+     */
+    public void getUserRating(String driverId, String userId, OnUserRatingLoadListener listener) {
+        driversRef.child(driverId).child("userRatings").child(userId).get()
+                .addOnSuccessListener(snapshot -> {
+                    if (snapshot.exists()) {
+                        Integer rating = snapshot.getValue(Integer.class);
+                        listener.onRatingLoaded(rating != null ? rating : 0);
+                    } else {
+                        listener.onRatingLoaded(0);
+                    }
+                })
+                .addOnFailureListener(e -> listener.onError(e.getMessage()));
+    }
+
+    // Add callback interface
+    public interface OnUserRatingLoadListener {
+        void onRatingLoaded(int rating);
+        void onError(String error);
     }
 
     // Search drivers by bus number
