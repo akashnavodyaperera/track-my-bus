@@ -7,6 +7,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
@@ -22,7 +23,7 @@ public class MyBusActivity extends AppCompatActivity {
 
     private LinearLayout layoutNoBus, layoutBusDetails;
     private TextView tvBusNumber, tvDriverName, tvFromLocation, tvToLocation,
-            tvPhoneNumber, tvEmail;
+            tvPhoneNumber, tvEmail, tvStarRating;
     private ImageView ivDriverProfile;
     private Button btnSelectBus, btnTrackBus, btnChangeBus;
     private BottomNavigationView bottomNavigation;
@@ -31,6 +32,10 @@ public class MyBusActivity extends AppCompatActivity {
     private BusDriverRepository busDriverRepository;
     private String currentUserId;
     private BusDriver selectedBus;
+
+    private RatingBar ratingBar;
+    private Button btnSubmitRating;
+    private TextView tvRatingInfo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,7 +52,7 @@ public class MyBusActivity extends AppCompatActivity {
         currentUserId = AuthRepository.getInstance().getCurrentUser().getUid();
 
         initViews();
-        loadMyBusFromFirebase(); // Load from Firebase instead of SharedPreferences
+        loadMyBusFromFirebase();
         setupBottomNavigation();
     }
 
@@ -65,18 +70,19 @@ public class MyBusActivity extends AppCompatActivity {
         btnTrackBus = findViewById(R.id.btnTrackBus);
         btnChangeBus = findViewById(R.id.btnChangeBus);
         bottomNavigation = findViewById(R.id.bottomNavigation);
+        ratingBar = findViewById(R.id.ratingBar);
+        btnSubmitRating = findViewById(R.id.btnSubmitRating);
+        tvRatingInfo = findViewById(R.id.tvRatingInfo);
+        tvStarRating = findViewById(R.id.tvStarRating);
     }
 
     private void loadMyBusFromFirebase() {
         Log.d(TAG, "Loading My Bus from Firebase...");
 
-        // First, get the bus ID from Firebase
         userRepository.getMyBusId(currentUserId, new UserRepository.OnMyBusLoadListener() {
             @Override
             public void onMyBusLoaded(String busDriverId) {
                 Log.d(TAG, "✅ My Bus ID: " + busDriverId);
-
-                // Then load the full bus driver details
                 loadBusDriverDetails(busDriverId);
             }
 
@@ -97,7 +103,6 @@ public class MyBusActivity extends AppCompatActivity {
     }
 
     private void loadBusDriverDetails(String busDriverId) {
-        // Load all drivers and find the one with matching ID
         busDriverRepository.getDriversOnce(new BusDriverRepository.OnDriversLoadListener() {
             @Override
             public void onDriversLoaded(java.util.List<BusDriver> drivers) {
@@ -109,7 +114,6 @@ public class MyBusActivity extends AppCompatActivity {
                         return;
                     }
                 }
-                // Bus not found
                 Log.e(TAG, "❌ Bus driver not found in database");
                 showNoBusSelected();
             }
@@ -130,6 +134,15 @@ public class MyBusActivity extends AppCompatActivity {
         tvDriverName.setText(selectedBus.getDriverName());
         tvFromLocation.setText(selectedBus.getFromLocation());
         tvToLocation.setText(selectedBus.getToLocation());
+
+        // Display star rating in the blue card
+        if (selectedBus.getTotalRatings() > 0) {
+            tvStarRating.setText(selectedBus.getStarString());
+            tvStarRating.setVisibility(View.VISIBLE);
+        } else {
+            tvStarRating.setText("☆☆☆☆☆");
+            tvStarRating.setVisibility(View.VISIBLE);
+        }
 
         // Show contact info if available
         if (selectedBus.getPhoneNumber() != null && !selectedBus.getPhoneNumber().isEmpty()) {
@@ -155,11 +168,24 @@ public class MyBusActivity extends AppCompatActivity {
         });
 
         btnChangeBus.setOnClickListener(v -> {
-            // Go back to home to select different bus
             Intent intent = new Intent(MyBusActivity.this, ParentDashboardActivity.class);
             startActivity(intent);
             finish();
         });
+
+        // Display rating info
+        if (selectedBus.getTotalRatings() > 0) {
+            tvRatingInfo.setText(String.format("Average: %.1f⭐ (%d ratings)",
+                    selectedBus.getAverageRating(), selectedBus.getTotalRatings()));
+        } else {
+            tvRatingInfo.setText("No ratings yet. Be the first to rate!");
+        }
+
+        // Load user's previous rating
+        loadUserRating();
+
+        // Setup rating submission
+        btnSubmitRating.setOnClickListener(v -> submitRating());
     }
 
     private void showNoBusSelected() {
@@ -189,20 +215,68 @@ public class MyBusActivity extends AppCompatActivity {
                 startActivity(new Intent(this, MapActivity.class));
                 return true;
             } else if (itemId == R.id.nav_feedback) {
-                // TODO: Feedback activity
                 return true;
             } else if (itemId == R.id.nav_about) {
-                // TODO: About activity
                 return true;
             }
             return false;
         });
     }
 
+    private void loadUserRating() {
+        busDriverRepository.getUserRating(selectedBus.getId(), currentUserId,
+                new BusDriverRepository.OnUserRatingLoadListener() {
+                    @Override
+                    public void onRatingLoaded(int rating) {
+                        if (rating > 0) {
+                            ratingBar.setRating(rating);
+                        }
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        Log.e(TAG, "Error loading rating: " + error);
+                    }
+                });
+    }
+
+    private void submitRating() {
+        int rating = (int) ratingBar.getRating();
+
+        if (rating == 0) {
+            Toast.makeText(this, "Please select a rating", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        btnSubmitRating.setEnabled(false);
+        btnSubmitRating.setText("Submitting...");
+
+        busDriverRepository.rateDriver(selectedBus.getId(), currentUserId, rating,
+                new BusDriverRepository.OnDriverSaveListener() {
+                    @Override
+                    public void onSuccess() {
+                        btnSubmitRating.setEnabled(true);
+                        btnSubmitRating.setText("Submit");
+                        Toast.makeText(MyBusActivity.this,
+                                "Rating submitted successfully!", Toast.LENGTH_SHORT).show();
+
+                        // Reload bus details to show updated rating
+                        loadMyBusFromFirebase();
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        btnSubmitRating.setEnabled(true);
+                        btnSubmitRating.setText("Submit");
+                        Toast.makeText(MyBusActivity.this,
+                                "Failed to submit rating: " + error, Toast.LENGTH_LONG).show();
+                    }
+                });
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
-        // Reload from Firebase when returning to this screen
         loadMyBusFromFirebase();
     }
 }
