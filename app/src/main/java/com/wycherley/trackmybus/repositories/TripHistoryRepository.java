@@ -97,3 +97,128 @@ public class TripHistoryRepository {
             }
         });
     }
+
+    /**
+     * Get trip history for a specific user and date
+     */
+    public void getUserTripHistoryByDate(String userId, String date,
+                                         OnTripHistoryLoadListener listener) {
+        Query query = tripHistoryRef.orderByChild("userId").equalTo(userId);
+
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                List<TripHistory> trips = new ArrayList<>();
+                for (DataSnapshot tripSnapshot : snapshot.getChildren()) {
+                    TripHistory trip = tripSnapshot.getValue(TripHistory.class);
+                    if (trip != null && date.equals(trip.getDate())) {
+                        trip.setId(tripSnapshot.getKey());
+                        trips.add(trip);
+                    }
+                }
+
+                // Sort by timestamp
+                Collections.sort(trips, (t1, t2) ->
+                        Long.compare(t2.getTimestamp(), t1.getTimestamp()));
+
+                listener.onHistoryLoaded(trips);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                listener.onError(error.getMessage());
+            }
+        });
+    }
+
+    /**
+     * Get recent trip history (last 30 days)
+     */
+    public void getRecentTripHistory(String userId, int days,
+                                     OnTripHistoryLoadListener listener) {
+        long cutoffTime = System.currentTimeMillis() - (days * 24L * 60 * 60 * 1000);
+
+        Query query = tripHistoryRef.orderByChild("userId").equalTo(userId);
+
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                List<TripHistory> trips = new ArrayList<>();
+                for (DataSnapshot tripSnapshot : snapshot.getChildren()) {
+                    TripHistory trip = tripSnapshot.getValue(TripHistory.class);
+                    if (trip != null && trip.getTimestamp() >= cutoffTime) {
+                        trip.setId(tripSnapshot.getKey());
+                        trips.add(trip);
+                    }
+                }
+
+                // Sort by timestamp (newest first)
+                Collections.sort(trips, (t1, t2) ->
+                        Long.compare(t2.getTimestamp(), t1.getTimestamp()));
+
+                Log.d(TAG, "Loaded " + trips.size() + " recent trips");
+                listener.onHistoryLoaded(trips);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                listener.onError(error.getMessage());
+            }
+        });
+    }
+
+    /**
+     * Delete a trip record
+     */
+    public void deleteTrip(String tripId, OnTripSaveListener listener) {
+        tripHistoryRef.child(tripId).removeValue()
+                .addOnSuccessListener(aVoid -> {
+                    Log.d(TAG, "Trip deleted successfully");
+                    listener.onSuccess();
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error deleting trip: " + e.getMessage());
+                    listener.onError(e.getMessage());
+                });
+    }
+
+    /**
+     * Get trip statistics for a user
+     */
+    public void getTripStatistics(String userId, OnTripStatsListener listener) {
+        Query query = tripHistoryRef.orderByChild("userId").equalTo(userId);
+
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                int totalTrips = 0;
+                int morningTrips = 0;
+                int afternoonTrips = 0;
+
+                for (DataSnapshot tripSnapshot : snapshot.getChildren()) {
+                    TripHistory trip = tripSnapshot.getValue(TripHistory.class);
+                    if (trip != null) {
+                        totalTrips++;
+                        if (trip.isMorningTrip()) {
+                            morningTrips++;
+                        } else {
+                            afternoonTrips++;
+                        }
+                    }
+                }
+
+                listener.onStatsLoaded(totalTrips, morningTrips, afternoonTrips);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                listener.onError(error.getMessage());
+            }
+        });
+    }
+
+    public interface OnTripStatsListener {
+        void onStatsLoaded(int totalTrips, int morningTrips, int afternoonTrips);
+        void onError(String error);
+    }
+}
