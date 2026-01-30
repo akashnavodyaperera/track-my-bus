@@ -153,7 +153,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                 return true;
             } else if (itemId == R.id.nav_map) {
                 return true;
-            } else if (itemId == R.id.nav_feedback) {
+            } else if (itemId == R.id.nav_history) {
                 // TODO: Navigate to Feedback
                 return true;
             } else if (itemId == R.id.nav_about) {
