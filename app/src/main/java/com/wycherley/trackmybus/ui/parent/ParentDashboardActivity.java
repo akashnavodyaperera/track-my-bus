@@ -17,10 +17,16 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.wycherley.trackmybus.R;
 import com.wycherley.trackmybus.adapters.BusDriverAdapter;
 import com.wycherley.trackmybus.models.BusDriver;
+import com.wycherley.trackmybus.models.TripHistory;
 import com.wycherley.trackmybus.repositories.AuthRepository;
 import com.wycherley.trackmybus.repositories.BusDriverRepository;
 import com.wycherley.trackmybus.repositories.UserRepository;
 import com.wycherley.trackmybus.utils.ParentBusPreference;
+import com.wycherley.trackmybus.repositories.TripHistoryRepository;
+import com.wycherley.trackmybus.adapters.TripHistoryAdapter;
+import com.wycherley.trackmybus.models.TripHistory;
+import com.wycherley.trackmybus.repositories.TripHistoryRepository;
+import com.wycherley.trackmybus.ui.parent.AboutActivity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -301,8 +307,8 @@ public class ParentDashboardActivity extends AppCompatActivity {
                 Intent intent = new Intent(ParentDashboardActivity.this, MapActivity.class);
                 startActivity(intent);
                 return true;
-            } else if (itemId == R.id.nav_feedback) {
-                Toast.makeText(this, "Feedback coming soon!", Toast.LENGTH_SHORT).show();
+            } else if (itemId == R.id.nav_history) {
+                Intent intent = new Intent(ParentDashboardActivity.this, HistoryActivity.class);
                 return true;
             } else if (itemId == R.id.nav_about) {
                 // Navigate to About Activity
