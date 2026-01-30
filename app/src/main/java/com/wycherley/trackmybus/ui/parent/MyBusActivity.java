@@ -214,7 +214,7 @@ public class MyBusActivity extends AppCompatActivity {
             } else if (itemId == R.id.nav_map) {
                 startActivity(new Intent(this, MapActivity.class));
                 return true;
-            } else if (itemId == R.id.nav_feedback) {
+            } else if (itemId == R.id.nav_history) {
                 return true;
             } else if (itemId == R.id.nav_about) {
                 return true;
