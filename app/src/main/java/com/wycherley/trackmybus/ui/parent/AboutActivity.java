@@ -6,13 +6,12 @@ import android.os.Bundle;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
-
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.wycherley.trackmybus.R;
 
 public class AboutActivity extends AppCompatActivity {
+    private static final String TAG = "AboutActivity";
 
     private BottomNavigationView bottomNavigation;
     private Button btnContactSupport;
@@ -23,14 +22,13 @@ public class AboutActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_about);
 
-        // Hide action bar
         if (getSupportActionBar() != null) {
             getSupportActionBar().hide();
         }
 
         initViews();
+        setupClickListeners();
         setupBottomNavigation();
-        setupButtons();
     }
 
     private void initViews() {
@@ -40,47 +38,32 @@ public class AboutActivity extends AppCompatActivity {
         tvPrivacy = findViewById(R.id.tvPrivacy);
     }
 
-    private void setupButtons() {
+    private void setupClickListeners() {
         // Contact Support Button
         btnContactSupport.setOnClickListener(v -> {
-            openEmailSupport();
+            // Open email app to contact support
+            Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
+            emailIntent.setData(Uri.parse("mailto:info@wycherley.lk"));
+            emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Track My Bus - Support Request");
+
+            try {
+                startActivity(Intent.createChooser(emailIntent, "Send email via..."));
+            } catch (android.content.ActivityNotFoundException ex) {
+                Toast.makeText(this, "No email app found", Toast.LENGTH_SHORT).show();
+            }
         });
 
         // Terms of Service
         tvTerms.setOnClickListener(v -> {
             Toast.makeText(this, "Terms of Service", Toast.LENGTH_SHORT).show();
-            // You can open a web page or show a dialog here
-            // openWebPage("https://wycherley.lk/terms");
+            // TODO: Open terms of service activity or web page
         });
 
         // Privacy Policy
         tvPrivacy.setOnClickListener(v -> {
             Toast.makeText(this, "Privacy Policy", Toast.LENGTH_SHORT).show();
-            // You can open a web page or show a dialog here
-            // openWebPage("https://wycherley.lk/privacy");
+            // TODO: Open privacy policy activity or web page
         });
-    }
-
-    private void openEmailSupport() {
-        Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
-        emailIntent.setData(Uri.parse("mailto:support@wycherley.lk"));
-        emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Track My Bus - Support Request");
-        emailIntent.putExtra(Intent.EXTRA_TEXT, "Hello Support Team,\n\nI need help with:\n\n");
-
-        try {
-            startActivity(Intent.createChooser(emailIntent, "Send email..."));
-        } catch (android.content.ActivityNotFoundException ex) {
-            Toast.makeText(this, "No email app installed", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void openWebPage(String url) {
-        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-        try {
-            startActivity(browserIntent);
-        } catch (android.content.ActivityNotFoundException ex) {
-            Toast.makeText(this, "No browser app installed", Toast.LENGTH_SHORT).show();
-        }
     }
 
     private void setupBottomNavigation() {
@@ -90,25 +73,21 @@ public class AboutActivity extends AppCompatActivity {
             int itemId = item.getItemId();
 
             if (itemId == R.id.nav_home) {
-                Intent intent = new Intent(this, ParentDashboardActivity.class);
-                startActivity(intent);
+                startActivity(new Intent(this, ParentDashboardActivity.class));
                 finish();
                 return true;
             } else if (itemId == R.id.nav_buses) {
-                Intent intent = new Intent(this, MyBusActivity.class);
-                startActivity(intent);
-                finish();
+                startActivity(new Intent(this, MyBusActivity.class));
                 return true;
             } else if (itemId == R.id.nav_map) {
-                Intent intent = new Intent(this, MapActivity.class);
-                startActivity(intent);
-                finish();
+                startActivity(new Intent(this, MapActivity.class));
                 return true;
-            } else if (itemId == R.id.nav_feedback) {
-                Toast.makeText(this, "Feedback coming soon!", Toast.LENGTH_SHORT).show();
+            } else if (itemId == R.id.nav_history) {
+                startActivity(new Intent(this, HistoryActivity.class));
                 return true;
             } else if (itemId == R.id.nav_about) {
-                return true; // Already on About page
+                // Already on About screen
+                return true;
             }
             return false;
         });
