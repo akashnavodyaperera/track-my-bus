@@ -106,6 +106,14 @@
             android:theme="@style/Theme.TrackMyBus.NoActionBar"
             android:parentActivityName=".ui.parent.ParentDashboardActivity" />
 
+        <!-- History Activity -->
+        <activity
+            android:name=".ui.parent.HistoryActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.TrackMyBus.NoActionBar"
+            android:parentActivityName=".ui.parent.ParentDashboardActivity" />
+
         <!-- Notifications Activity -->
         <activity
             android:name=".ui.parent.NotificationsActivity"
@@ -136,6 +144,14 @@
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.TrackMyBus.NoActionBar" />
+
+        <!-- About Activity -->
+        <activity
+            android:name=".ui.parent.AboutActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.TrackMyBus.NoActionBar"
+            android:parentActivityName=".ui.parent.ParentDashboardActivity" />
 
         <!-- ========================================== -->
         <!-- DRIVER ACTIVITIES -->
@@ -207,14 +223,6 @@
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.TrackMyBus" />
-
-        <!-- About Activity -->
-        <activity
-            android:name=".ui.parent.AboutActivity"
-            android:exported="false"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.TrackMyBus.NoActionBar"
-            android:parentActivityName=".ui.parent.ParentDashboardActivity" />
 
     </application>
 
