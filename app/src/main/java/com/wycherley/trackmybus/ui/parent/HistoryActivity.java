@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -24,7 +25,8 @@ public class HistoryActivity extends AppCompatActivity {
 
     private RecyclerView rvTripHistory;
     private ProgressBar progressBar;
-    private TextView tvNoHistory, tvTotalTrips, tvMorningTrips, tvAfternoonTrips;
+    private LinearLayout layoutNoHistory;  // ✅ Changed from TextView to LinearLayout
+    private TextView tvTotalTrips, tvMorningTrips, tvAfternoonTrips;
     private MaterialButton btnAllTrips, btnMorningTrips, btnAfternoonTrips;
     private BottomNavigationView bottomNavigation;
 
@@ -58,7 +60,7 @@ public class HistoryActivity extends AppCompatActivity {
     private void initViews() {
         rvTripHistory = findViewById(R.id.rvTripHistory);
         progressBar = findViewById(R.id.progressBar);
-        tvNoHistory = findViewById(R.id.tvNoHistory);
+        layoutNoHistory = findViewById(R.id.tvNoHistory);  // ✅ Changed variable name
         tvTotalTrips = findViewById(R.id.tvTotalTrips);
         tvMorningTrips = findViewById(R.id.tvMorningTrips);
         tvAfternoonTrips = findViewById(R.id.tvAfternoonTrips);
@@ -152,10 +154,10 @@ public class HistoryActivity extends AppCompatActivity {
         historyAdapter.setTrips(filteredTrips);
 
         if (filteredTrips.isEmpty()) {
-            tvNoHistory.setVisibility(View.VISIBLE);
+            layoutNoHistory.setVisibility(View.VISIBLE);  // ✅ Changed
             rvTripHistory.setVisibility(View.GONE);
         } else {
-            tvNoHistory.setVisibility(View.GONE);
+            layoutNoHistory.setVisibility(View.GONE);  // ✅ Changed
             rvTripHistory.setVisibility(View.VISIBLE);
         }
     }
@@ -183,7 +185,7 @@ public class HistoryActivity extends AppCompatActivity {
                                 "Error loading history: " + error,
                                 Toast.LENGTH_LONG).show();
 
-                        tvNoHistory.setVisibility(View.VISIBLE);
+                        layoutNoHistory.setVisibility(View.VISIBLE);  // ✅ Changed
                         rvTripHistory.setVisibility(View.GONE);
                     }
                 });
