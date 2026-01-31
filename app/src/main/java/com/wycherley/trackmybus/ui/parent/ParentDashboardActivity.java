@@ -308,8 +308,11 @@ public class ParentDashboardActivity extends AppCompatActivity {
                 startActivity(intent);
                 return true;
             } else if (itemId == R.id.nav_history) {
-                Intent intent = new Intent(ParentDashboardActivity.this, HistoryActivity.class);
+                Log.d(TAG, "🔥🔥🔥 HISTORY CLICKED!");
+                Toast.makeText(this, "History!", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(this, HistoryActivity.class));
                 return true;
+
             } else if (itemId == R.id.nav_about) {
                 // Navigate to About Activity
                 Intent intent = new Intent(ParentDashboardActivity.this, AboutActivity.class);
